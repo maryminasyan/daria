@@ -212,7 +212,16 @@ class ToyEmissionLineUniverse(object):
         self.update_pop_z(z)
         return self.pop.get_lf_line(z,line=line)
 
-    def get_xcorr_tot(self,ell,channels,zbins,xcorr_mask=None,sum_lines=False):
+    def __convert_output(self,ps,ell,output='cell'):
+        if output.lower() == 'dell':
+            conversion = ell[None,None,:] * (ell[None,None,:] + 1) / 2 / np.pi
+        else:
+            assert output.lower() == 'cell', 'Unsupported output'
+            conversion = 1
+        return ps * conversion
+
+    def get_xcorr_tot(self,ell,channels,zbins,xcorr_mask=None,\
+                      sum_lines=False,output='cell'):
         """
         Compute the galaxy/EBL cross spectrum for the entire matrix at once.
         """
@@ -248,9 +257,11 @@ class ToyEmissionLineUniverse(object):
         if sum_lines: # sum over all lines
             xcorr_mtx = xcorr_mtx.sum(axis=0)
 
+        xcorr_mtx = self.__convert_output(xcorr_mtx,ell,output=output)
+
         return xcorr_mtx
 
-    def get_ps_tot(self,ell,channels,sum_lines=False):
+    def get_ps_tot(self,ell,channels,sum_lines=False,output='cell'):
         """
         Compute the EBL auto power spectrum for the entire matrix at once.
         """
@@ -276,6 +287,8 @@ class ToyEmissionLineUniverse(object):
 
         if sum_lines: # sum over all lines
             ps_mtx = ps_mtx.sum(axis=0)
+
+        ps_mtx = self.__convert_output(ps_mtx,ell,output=output)
 
         return ps_mtx
 

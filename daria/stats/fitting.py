@@ -90,10 +90,9 @@ def lnpost(x, *args):
             # Just ones and zeros.
             xcorr_mask = data['fit_mask']
             
-            C_ell = model.get_xcorr_tot(lbins,channels,zbins,\
-                                        xcorr_mask=xcorr_mask,sum_lines=True)
-            ells = lbins[None,None,:]
-            D_ell = ells * (ells + 1) * C_ell / 2. / np.pi
+            D_ell = model.get_xcorr_tot(lbins,channels,zbins,\
+                                        xcorr_mask=xcorr_mask,sum_lines=True,\
+                                        output='dell')
             ps_mod = np.ma.array(D_ell, mask=np.logical_not(xcorr_mask))
 
             ps_dat = data['xcorr']
