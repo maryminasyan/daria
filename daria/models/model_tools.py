@@ -38,7 +38,7 @@ def set_attrs(obj,default_dict,overwrite=False,**kwargs):
 
 def get_mlim(mlim):
     """
-    Get integration bound corresponding to `mlim`, the halo mass
+    Get integration bound corresponding to `mlim`, the LOG10 halo mass
     corresponding to the limiting magnitude of a population of target galaxies.
 
     If `mlim` is None, integrate to arbitrarily small halo masses (really, the
@@ -47,13 +47,13 @@ def get_mlim(mlim):
     emissivity from the target galaxies.
     """
     if mlim is None:
-        return 0
+        return -np.inf
     else:
         return mlim
 
 def get_mask(mask):
     """
-    Get integration bound corresponding to `mask`, the halo mass
+    Get integration bound corresponding to `mask`, the LOG10 halo mass
     corresponding to the masking depth.
 
     If `mask=None`, assume no mask, in which case integrate to arbitrarily

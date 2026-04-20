@@ -8,8 +8,8 @@ from ..utils.constants import c, m_per_mpc, erg_per_s_per_nW, sqdeg_per_std
 from . import model_tools as mt
 
 class ToyGalaxyPopulation(object):
-    def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=1e11,\
-                 mask=1e12,mmin=1e8,rturn=1,norm_sfr=1e-4,mbreak_sfr=1e12,\
+    def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=11,\
+                 mask=12,mmin=8,rturn=1,norm_sfr=-4,mbreak_sfr=12,\
                  slope_lo_sfr=1.5,slope_hi_sfr=0.5,norm_Av=1.,slope_Av=0.5,\
                  **kwargs):
         """
@@ -59,6 +59,15 @@ class ToyGalaxyPopulation(object):
         """
         mt.set_attrs(self,self.init_args,overwrite=True,**kwargs)
 
+    def exponentiate(self,log_quantity):
+        return 10**log_quantity
+
+    def get_integration_bounds(self):
+        m = self.m
+        mmin = self.exponentiate(self.mmin)
+        mask = self.exponentiate(self.mask)
+        return np.logical_and(m >= mmin, m < mask)
+    
     @property
     def hmf(self):
         if not hasattr(self, '_hmf'):
@@ -155,15 +164,19 @@ class ToyGalaxyPopulation(object):
         m : int, float, np.ndarray
             Halo mass(es) of interest [Msun]
         """
-        normcorr = (1e10 / self.mbreak_sfr)**-self.slope_lo_sfr + \
-            (1e10 / self.mbreak_sfr)**-self.slope_hi_sfr
+        mbreak_sfr = self.exponentiate(self.mbreak_sfr)
+        norm_sfr = self.exponentiate(self.norm_sfr)
+        
+        normcorr = (1e10 / mbreak_sfr)**-self.slope_lo_sfr + \
+            (1e10 / mbreak_sfr)**-self.slope_hi_sfr
 
-        return normcorr * self.norm_sfr / \
-            ((m / self.mbreak_sfr)**-self.slope_lo_sfr + \
-             (m / self.mbreak_sfr)**-self.slope_hi_sfr)
+        return normcorr * norm_sfr / \
+            ((m / mbreak_sfr)**-self.slope_lo_sfr + \
+             (m / mbreak_sfr)**-self.slope_hi_sfr)
 
     def get_focc(self,m):
-        return 1 - np.exp(-(m / self.mmin)**self.rturn)
+        mmin = self.exponentiate(self.mmin)
+        return 1 - np.exp(-(m / mmin)**self.rturn)
 
     def get_sfrd(self,z):
         """
@@ -268,8 +281,7 @@ class ToyGalaxyPopulation(object):
         Compute the line-intensity-weighted bias at redshift `z`.
         """
         self.hmf.update(z=z)
-        m = self.m
-        ok = np.logical_and(m >= self.mmin, m < self.mask)
+        ok = self.get_integration_bounds()
         m_use = m[ok]
 
         bh = self.get_halo_bias(z)[ok]
@@ -287,8 +299,7 @@ class ToyGalaxyPopulation(object):
         Compute the line emissivity (nW/m^2/sr) at redshift `z`.
         """
         self.hmf.update(z=z)
-        m = self.m
-        ok = np.logical_and(m >= self.mlim, m < self.mask)
+        ok = self.get_integration_bounds()
         m_use = m[ok]
 
         H, chi = self.get_Hcm_and_chi(z)

@@ -13,11 +13,11 @@ class ToyEmissionLineUniverse(object):
     correction, whereas the ToyGalaxyPopulation does not explicitly deal
     in redshift evolution.
     """
-    def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=1e11,\
-                 mask=1e12,include_lines='all',mmin_0=1e8,mmin_z=0,rturn=1,\
-                 norm_sfr_0=1e-4,norm_sfr_a=2.5,norm_sfr_z=0,mbreak_sfr=1e12,\
-                 slope_lo_sfr=1.5,slope_hi_sfr=0.5,norm_Av_0=1,norm_Av_z=0.2,\
-                 slope_Av=0.1,**kwargs):
+    def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=11,\
+                 mask=12,include_lines='all',mmin_0=8,mmin_z=0,\
+                 rturn=1,norm_sfr_0=-4,norm_sfr_a=2.5,norm_sfr_z=0,\
+                 mbreak_sfr=12,slope_lo_sfr=1.5,slope_hi_sfr=0.5,\
+                 norm_Av_0=1,norm_Av_z=0.2,slope_Av=0.1,**kwargs):
         """
         metal_line_model : str, bool
             How to model metal lines (mainly [NII] and [OIII], but [OII] is
@@ -130,8 +130,8 @@ class ToyEmissionLineUniverse(object):
         pop_kwargs = {key:value for key, value in kwargs.items() \
                       if key in self.pop.init_args.keys()}
 
-        # 2. "Massage" other relevant kwargs to have correct attr names
-        # (e.g., things like `mmin_0` will be assigned to `mmin` in `pop`)
+        # 2. "Massage" other relevant kwargs to have correct attr names (e.g.,
+        # things like `mmin_0` will be assigned to `mmin` in `pop`)
         suffix = '_0'
         for key, value in kwargs.items():
             if key.endswith(suffix):
@@ -162,23 +162,25 @@ class ToyEmissionLineUniverse(object):
         return c_0 + a**-c_z
 
     def get_mmin(self,z):
-        return self.__get_a_pow(z,self.mmin_0,self.mmin_z)
+        ''' log10(mmin) '''
+        return np.log10(self.__get_a_pow(z,10**self.mmin_0,self.mmin_z))
 
     def get_norm_Av(self,z):
+        ''' (not a log) '''
         norm_Av = self.__get_a_pow(z,self.norm_Av_0,self.norm_Av_z)
         return max(norm_Av,0)
 
     def get_norm_sfr(self,z):
+        ''' Implicitly log10(norm_sfr) '''
         a = self.get_a(z)
-        mmin = self.get_mmin(z)
-        log10_norm_sfr = np.log10(self.norm_sfr_0) + \
+        norm_sfr = self.norm_sfr_0 + \
             self.norm_sfr_a * (1. - a) + self.norm_sfr_z * z
-        return 10**log10_norm_sfr
+        return norm_sfr
 
     def update_pop_z(self,z):
         """
         Perform redshift scaling on any relevant parameters in
-        `ToyGalaxyPopulation`. Currently, only `mmin`, `norm_sfr`, and
+        `ToyGalaxyPopulation`. Currently, only `log_mmin`, `log_norm_sfr`, and
         `norm_Av` are redshift-dependent. This does **NOT** update `hmf`, nor
         does it change any parameters of `ToyEmissionLineUniverse`.
 

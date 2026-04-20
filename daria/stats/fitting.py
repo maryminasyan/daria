@@ -2,40 +2,32 @@ import numpy as np
 
 ##
 # On to function definitions
-def kwargs_to_args(kw, params, is_log):
+def kwargs_to_args(kw, params):
     """
     Take a set of keywords arguments used to run a model and
     convert them to a list of arguments that emcee will understand.
     """
     args = []
     for i, par in enumerate(params):
-        if par in is_log:
-            args.append(np.log10(kw[par]))
-        else:
-            args.append(kw[par])
+        args.append(kw[par])
 
     return args
 
-def args_to_kwargs(args, params, is_log):
+def args_to_kwargs(args, params):
     kwargs = {}
 
     # Update kwargs with current walker position.
     for i, arg in enumerate(args):
-        par = params[i]
-
-        if par in is_log:
-            kwargs[par] = 10**arg
-        else:
-            kwargs[par] = arg
+        kwargs[params[i]] = arg
 
     return kwargs
 
 def lnprior(x, *args):
     """ Assess the prior. """
 
-    params, is_log, priors = args
+    params, priors = args
 
-    kwargs = args_to_kwargs(x, params, is_log)
+    kwargs = args_to_kwargs(x, params)
 
     for key in kwargs:
         if priors[key][0] <= kwargs[key] < priors[key][1]:
@@ -50,17 +42,17 @@ def lnpost(x, *args):
     Compute posterior probability for model described by given parameters.
     """
 
-    data, model, params, is_log, priors = args
+    data, model, params, priors = args
 
     # First, retrieve our prior, and return if we're in violation of it.
-    lnP = lnprior(x, params, is_log, priors)
+    lnP = lnprior(x, params, priors)
 
     if not np.isfinite(lnP):
         return -np.inf
 
     # Next, convert our list of parameters to a dictionary that we can
     # pass to our modeling class.
-    kwargs = args_to_kwargs(x, params, is_log)
+    kwargs = args_to_kwargs(x, params)
     
     model.update(**kwargs)
 
@@ -79,9 +71,6 @@ def lnpost(x, *args):
         lbins = data['ellbins']
         channels = data['channels']
         zbins = data['zbins']
-
-       # kw = base_kwargs.copy()
-       # kw.update(kwargs)
 
         # Can include series of channels in fit, though the input model
         # must be a ToyEmissionLineUniverse rather than ToyGalaxyPopulation.
