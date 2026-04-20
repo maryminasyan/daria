@@ -19,6 +19,8 @@ class ToyEmissionLineUniverse(object):
                  mbreak_sfr=12,slope_lo_sfr=1.5,slope_hi_sfr=0.5,\
                  norm_Av_0=1,norm_Av_z=0.2,slope_Av=0.1,**kwargs):
         """
+        Note - mlim, mask, mmin_0, and norm_sfr_0 are all LOG quantities.
+        
         metal_line_model : str, bool
             How to model metal lines (mainly [NII] and [OIII], but [OII] is
             affected by association). Depending on the model you choose, you
@@ -180,7 +182,7 @@ class ToyEmissionLineUniverse(object):
     def update_pop_z(self,z):
         """
         Perform redshift scaling on any relevant parameters in
-        `ToyGalaxyPopulation`. Currently, only `log_mmin`, `log_norm_sfr`, and
+        `ToyGalaxyPopulation`. Currently, only `mmin`, `norm_sfr`, and
         `norm_Av` are redshift-dependent. This does **NOT** update `hmf`, nor
         does it change any parameters of `ToyEmissionLineUniverse`.
 

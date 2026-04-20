@@ -13,6 +13,8 @@ class ToyGalaxyPopulation(object):
                  slope_lo_sfr=1.5,slope_hi_sfr=0.5,norm_Av=1.,slope_Av=0.5,\
                  **kwargs):
         """
+        Note - mlim, mask, mmin, and norm_sfr are all LOG quantities.
+        
         Initialize a toy model capable of (for now) doing cross-correlations
         between a galaxy sample and intensity map. For more information on
         what kwargs to provide for different metal_line_model inputs, see
