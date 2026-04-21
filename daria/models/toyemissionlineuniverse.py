@@ -276,16 +276,19 @@ class ToyEmissionLineUniverse(object):
 
             # Redshift bins for this particular line
             # lam_obs = lam_rest * (1. + z)
-            zbin = mt.get_channel_zbin(channels,line)
-
+            z_edges, z_centers = mt.get_channel_zbin(channels,line)
+            
             for j, chan1 in enumerate(channels):
-                z = np.mean(zbins[j])
+                zbin = z_edges[j]
+                z = z_centers[j]
+                if np.isnan(z):
+                    continue
                 self.update_pop_z(z)
                 _ell_ = self.pop.get_ell(z)
                 for i, chan2 in enumerate(channels):
                     if i != j:
                         continue
-                    ps = self.pop.get_ps_chan_line(chan1,zbin=zbins[j],\
+                    ps = self.pop.get_ps_chan_line(chan1,zbin=zbin,\
                                                    line=line)
                     ps_mtx[k,j,i,:] += np.interp(ell, _ell_, ps)
 
@@ -305,8 +308,9 @@ class ToyEmissionLineUniverse(object):
         for k, line in enumerate(self.include_lines):
             # Redshift bins for this particular line
             # lam_obs = lam_rest * (1. + z)
-            zbin = mt.get_channel_zbin(channel,line)
-            z = np.mean(zbin)
+            zbin, z = mt.get_channel_zbin(channel,line)
+            if np.isnan(z):
+                continue
             self.update_pop_z(z)
             _ell_ = self.pop.get_ell(z)
             ps = self.pop.get_ps_chan_line(channel,zbin=zbin,line=line)

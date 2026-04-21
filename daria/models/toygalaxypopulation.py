@@ -68,7 +68,8 @@ class ToyGalaxyPopulation(object):
         m = self.m
         mmin = self.exponentiate(self.mmin)
         mask = self.exponentiate(self.mask)
-        return np.logical_and(m >= mmin, m < mask)
+        ok = np.logical_and(m >= mmin, m < mask)
+        return m[ok], ok
     
     @property
     def hmf(self):
@@ -283,8 +284,7 @@ class ToyGalaxyPopulation(object):
         Compute the line-intensity-weighted bias at redshift `z`.
         """
         self.hmf.update(z=z)
-        ok = self.get_integration_bounds()
-        m_use = m[ok]
+        m_use, ok = self.get_integration_bounds()
 
         bh = self.get_halo_bias(z)[ok]
         lum = self.get_lum_line(m_use,line=line)
@@ -301,8 +301,7 @@ class ToyGalaxyPopulation(object):
         Compute the line emissivity (nW/m^2/sr) at redshift `z`.
         """
         self.hmf.update(z=z)
-        ok = self.get_integration_bounds()
-        m_use = m[ok]
+        m_use, ok = self.get_integration_bounds()
 
         H, chi = self.get_Hcm_and_chi(z)
         nu = self.get_freq_line(line)                           # Hz
@@ -343,7 +342,8 @@ class ToyGalaxyPopulation(object):
             galaxies and line)
         """
         # Compute redshift interval for this line and spectral channel
-        zlo_l, zhi_l = mt.get_channel_zbin(channel,line)
+        zbin_l, z = mt.get_channel_zbin(channel,line)
+        zlo_l, zhi_l = zbin_l
         dz_l = zhi_l - zlo_l
 
         # If user supplied a redshift bin, use it.
@@ -363,7 +363,6 @@ class ToyGalaxyPopulation(object):
         # Compute relevant redshift intervals
         else:
             dz_gl = dz_g = dz_l
-            z = mt.get_channel_zbin(np.mean(channel),line)
 
         return z, dz_g, dz_l, dz_gl
 

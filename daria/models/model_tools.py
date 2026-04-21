@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 from ..utils.line_info import line_rwaves
 
 def set_attrs(obj,default_dict,overwrite=False,**kwargs):
@@ -114,5 +115,31 @@ def get_metal_line_kwargs(obj,metal_line_model):
         kwargs[key] = getattr(obj,key)
     return kwargs
 
-def get_channel_zbin(channel,line):
-    return channel * 1e4 / line_rwaves[line] - 1
+def correct_zbin(zbin,do_corr=True):
+    zbin_out = copy.deepcopy(zbin)
+    if do_corr and np.all(zbin < 0):
+        zbin_out = np.array([np.nan,np.nan])
+        z_cen = np.nan
+    elif do_corr and np.any(zbin < 0):
+        zbin_out[np.where(zbin < 0)[0]] = 0
+        z_cen = np.max(np.mean(zbin),0) # no negative z_cen
+    else:
+        z_cen = np.mean(zbin_out)
+    return zbin_out, z_cen
+
+def get_channel_zbin(channel,line,do_corr=True):
+    z_edges = channel * 1e4 / line_rwaves[line] - 1
+    single_bin = z_edges.shape == (2,)
+    if single_bin:
+        z_edges_use = np.array([z_edges])
+    else:
+        z_edges_use = z_edges
+    zbins_out = np.zeros(z_edges_use.shape)
+    z_cen_out = np.zeros(len(z_edges_use))
+    for i in range(len(z_cen_out)):
+        z_e, z_c = correct_zbin(z_edges_use[i],do_corr=do_corr)
+        zbins_out[i] = z_e
+        z_cen_out[i] = z_c
+    if single_bin:
+        zbins_out = zbins_out.flatten()
+    return zbins_out, z_cen_out
