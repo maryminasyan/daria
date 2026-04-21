@@ -340,14 +340,8 @@ class ToyEmissionLineUniverse(object):
 
         Returns
         -------
-        scales : np.ndarray
-            ell modes
-        waves : np.ndarray
-            Spectral channel definitions
         ps_tot : np.ndarray
             Total EBL power spectrum, with shape (len(scales),len(waves))
-        x_terms : `None`
-            Cross-term matrix
         """
         if zbins is None: # Internal autos or crosses
             assert waves2 is None, 'Internal crosses are not yet supported'
@@ -362,6 +356,4 @@ class ToyEmissionLineUniverse(object):
             ps_tot = self.get_xcorr_tot(scales,waves,zbins,\
                                         xcorr_mask=xcorr_mask,sum_lines=True)
 
-        x_terms = None
-
-        return scales, waves, ps_tot, x_terms
+        return ps_tot
