@@ -318,7 +318,9 @@ class ToyEmissionLineUniverse(object):
 
         return ps_mtx
 
-    def get_ebl_ps(self,scales,waves,waves2=None,zbins=None,xcorr_mask=None):
+    def get_ebl_ps(self,scales,waves,waves2=None,zbins=None,xcorr_mask=None,\
+                   wave_units='mic',scale_units='ell',flux_units='si',\
+                   **kwargs):
         """
         Get EBL power spectrum.
 
@@ -344,8 +346,7 @@ class ToyEmissionLineUniverse(object):
             Total EBL power spectrum, with shape (len(scales),len(waves))
         """
         if zbins is None: # Internal autos or crosses
-            assert waves2 is None, 'Internal crosses are not yet supported'
-
+            # note that only autos are computed ...
             # This is a 3D array of shape (waves,waves,scales)
             ps_tot = self.get_ps_tot(scales,waves,sum_lines=True)
 
