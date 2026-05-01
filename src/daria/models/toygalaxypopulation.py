@@ -418,11 +418,16 @@ class ToyGalaxyPopulation(object):
             Name of emission line of interest, e.g., 'Ha', 'Hb', 'OIII', etc.
         """
         z, dz_g, dz_l, dz_gl = self.get_z_dz(channel,line,zbin=zbin) # dz's
-        H, chi = self.get_Hcm_and_chi(z)
-        pmm = self.get_pmm(z)                   # matter power spectrum
-        bl = self.get_bias_line(z, line=line)   # line intensity weighted bias
-        nuInu_l = self.get_nuInu(z, line=line)  # line intensity
-        return (H * bl**2 / c / chi**2 / dz_l) * nuInu_l**2 * pmm
+        
+        if dz_g == 0:
+            return np.zeros_like(self.hmf.k)
+        else:
+            H, chi = self.get_Hcm_and_chi(z)
+            pmm = self.get_pmm(z)                   # matter power spectrum
+            # line intensity weighted bias
+            bl = self.get_bias_line(z, line=line)
+            nuInu_l = self.get_nuInu(z, line=line)  # line intensity
+            return (H * bl**2 / c / chi**2 / dz_l) * nuInu_l**2 * pmm
 
     def get_power_shot(self,channel,zbin=None,line='Ha'):
         """
@@ -441,9 +446,12 @@ class ToyGalaxyPopulation(object):
             Name of emission line of interest, e.g., 'Ha', 'Hb', 'OIII', etc.
         """
         z, dz_g, dz_l, dz_gl = self.get_z_dz(channel, line, zbin=zbin)
-        H, chi = self.get_Hcm_and_chi(z)
-        nuInu_l = self.get_nuInu(z, line=line)
-        return (1. / dz_l) * (H / chi**2 / c) * nuInu_l
+        if dz_g == 0:
+            return 0
+        else:
+            H, chi = self.get_Hcm_and_chi(z)
+            nuInu_l = self.get_nuInu(z, line=line)
+            return (1. / dz_l) * (H / chi**2 / c) * nuInu_l
 
     def get_ps_chan_line(self,channel,zbin=None,line='Ha'):
         """
@@ -513,7 +521,7 @@ class ToyGalaxyPopulation(object):
         """
         z, dz_g, dz_l, dz_gl = self.get_z_dz(channel, line, zbin=zbin) # dz's
 
-        if dz_g == 0:
+        if (dz_g == 0) or (dz_l == 0):
             return np.zeros_like(self.hmf.k)
 
         H, chi = self.get_Hcm_and_chi(z)
@@ -545,7 +553,7 @@ class ToyGalaxyPopulation(object):
         """
         z, dz_g, dz_l, dz_gl = self.get_z_dz(channel,line,zbin=zbin)
 
-        if dz_g == 0:
+        if (dz_g == 0) or (dz_l == 0):
             return np.zeros_like(self.hmf.k)
 
         nuInu_l = self.get_nuInu(z,line=line)
@@ -603,7 +611,7 @@ class ToyGalaxyPopulation(object):
                                                   line=line)
         return ps
 
-    def get_target_prop(self,zbin,n_target,b_target):
+    def get_target_prop(self,zbin,n_target=None,b_target=None):
         """
         Return the key properties of the galaxy population we're cross-
         correlating with.

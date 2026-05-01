@@ -281,7 +281,7 @@ class ToyEmissionLineUniverse(object):
             for j, chan1 in enumerate(channels):
                 zbin = z_edges[j]
                 z = z_centers[j]
-                if np.isnan(z):
+                if z == 0:
                     continue
                 self.update_pop_z(z)
                 _ell_ = self.pop.get_ell(z)
@@ -309,7 +309,7 @@ class ToyEmissionLineUniverse(object):
             # Redshift bins for this particular line
             # lam_obs = lam_rest * (1. + z)
             zbin, z = mt.get_channel_zbin(channel,line)
-            if np.isnan(z):
+            if z == 0:
                 continue
             self.update_pop_z(z)
             _ell_ = self.pop.get_ell(z)

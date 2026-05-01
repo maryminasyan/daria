@@ -118,11 +118,11 @@ def get_metal_line_kwargs(obj,metal_line_model):
 def correct_zbin(zbin,do_corr=True):
     zbin_out = copy.deepcopy(zbin)
     if do_corr and np.all(zbin < 0):
-        zbin_out = np.array([np.nan,np.nan])
-        z_cen = np.nan
+        zbin_out = np.array([0,0])
+        z_cen = 0
     elif do_corr and np.any(zbin < 0):
         zbin_out[np.where(zbin < 0)[0]] = 0
-        z_cen = np.max(np.mean(zbin),0) # no negative z_cen
+        z_cen = np.max([np.mean(zbin),0]) # no negative z_cen
     else:
         z_cen = np.mean(zbin_out)
     return zbin_out, z_cen
