@@ -224,6 +224,27 @@ class ToyEmissionLineUniverse(object):
             conversion = 1
         return ps * conversion
 
+    def get_gal_ps_tot(self,ell,zbins,output='cell'):
+        """
+        Compute the auto power spectrum of the target galaxies for all
+        redshift bins at once.
+        """
+        gal_ps_mtx = np.zeros((zbins.shape[0],ell.size))
+        zbins_c = np.mean(zbins,axis=1)
+        for i, zbin in enumerate(zbins):
+            z = zbins_c[i]
+            if z == 0:
+                continue
+            self.update_pop_z(z)
+            _ell_ = self.pop.get_ell(z)
+            n, b = self.pop.get_target_prop(zbin,None,None)
+            ps = self.pop.get_gal_ps_chan(zbin,n_target=n,b_target=b)
+            gal_ps_mtx[i,:] = np.interp(ell,_ell_,ps)
+
+        gal_ps_mtx = self.__convert_output(gal_ps_mtx,ell,output=output)
+        
+        return gal_ps_mtx
+
     def get_xcorr_tot(self,ell,channels,zbins,xcorr_mask=None,\
                       sum_lines=False,output='cell'):
         """
@@ -254,7 +275,7 @@ class ToyEmissionLineUniverse(object):
             for i, chan in enumerate(channels):
                 for k, line in enumerate(self.include_lines):
                     ps = self.pop.get_xcorr_chan_line(chan,zbin=zbin,\
-                                                      ntarget=n,btarget=b,\
+                                                      n_target=n,b_target=b,\
                                                       line=line)
                     xcorr_mtx[k,i,j,:] += np.interp(ell,_ell_,ps)
 

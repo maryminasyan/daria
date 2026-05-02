@@ -401,6 +401,50 @@ class ToyGalaxyPopulation(object):
         self.hmf.update(z=z)
         return self.hmf.power / self.h**3
 
+    def get_gal_2h(self,zbin,b_target):
+        """
+        Auto 2-halo (linear) clustering of target galaxies.
+        """
+        z = np.mean(zbin)
+        dz_g = zbin[1] - zbin[0]
+        if dz_g == 0:
+            return np.zeros_like(self.hmf.k)
+        else:
+            H, chi = self.get_Hcm_and_chi(z)
+            pmm = self.get_pmm(z)
+            return (H / chi**2 / dz_g / c) * b_target**2 * pmm
+
+    def get_gal_shot(self,zbin,n_target):
+        """
+        Auto shot power of target galaxies.
+        """
+        z = np.mean(zbin)
+        dz_g = zbin[1] - zbin[0]
+        if dz_g == 0:
+            return 0
+        else:
+            return 1/(dz_g * n_target)
+
+    def get_gal_ps_chan(self,zbin,n_target=None,b_target=None):
+        """
+        Compute auto power of target galaxies.
+
+        Parameters
+        ----------
+        zbin : np.ndarray
+            Edges of redshift bin of interest
+        n_target : int, float, None
+            Surface density of galaxies in number per deg^2 (in this `zbin`).
+        b_target : int, float, None
+            Bias of galaxies in this redshift bin.
+        """
+        n_target, b_target = self.get_target_prop(zbin,n_target,b_target)
+
+        ps_2h = self.get_gal_2h(zbin,b_target)
+        ps_sh = self.get_gal_shot(zbin,n_target)
+
+        return ps_sh + ps_2h
+    
     def get_power_2h(self,channel,zbin=None,line='Ha'):
         """
         Compute auto EBL linear clustering (2-halo) power.
@@ -498,7 +542,7 @@ class ToyGalaxyPopulation(object):
                 ps[j] += self.get_ps_chan_line(channel,zbin=zbin,line=line)
         return ps
 
-    def get_xpower_2h(self,channel,ntarget,btarget,zbin=None,line='Ha'):
+    def get_xpower_2h(self,channel,n_target,b_target,zbin=None,line='Ha'):
         """
         Compute large-scale cross-power (nW^2 m^-4 sr^-2) between galaxies
         and EBL.
@@ -508,9 +552,9 @@ class ToyGalaxyPopulation(object):
         channel : np.ndarray
             Two-element array containing the spectral channel bin edges
             [micron].
-        ntarget : int, float
+        n_target : int, float
             Surface density of target galaxies [sr^-2].
-        btarget : int, float
+        b_target : int, float
             Linear bias of target galaxies.
         zbin : np.ndarray
             Two-element array containing the redshift bin edges. Defaults to
@@ -529,10 +573,10 @@ class ToyGalaxyPopulation(object):
         bl = self.get_bias_line(z, line=line)   # line intensity weighted bias
         nuInu_l = self.get_nuInu(z, line=line)  # line intensity
 
-        return (H * dz_gl * btarget * bl / c / chi**2 / dz_g / dz_l) \
+        return (H * dz_gl * b_target * bl / c / chi**2 / dz_g / dz_l) \
             * nuInu_l * pmm
 
-    def get_xpower_shot(self,channel,ntarget,zbin=None,line='Ha'):
+    def get_xpower_shot(self,channel,n_target,zbin=None,line='Ha'):
         """
         Compute cross-shot-power between galaxies and EBL.
 
@@ -541,7 +585,7 @@ class ToyGalaxyPopulation(object):
         channel : np.ndarray
             Two-element array containing the spectral channel bin edges
             [micron].
-        ntarget : int, float
+        n_target : int, float
             Surface density of galaxies in target sample, i.e., galaxies we're
             cross correlating with [# / deg^2].
         zbin : np.ndarray
@@ -558,10 +602,10 @@ class ToyGalaxyPopulation(object):
 
         nuInu_l = self.get_nuInu(z,line=line)
 
-        return (dz_g / dz_l) * nuInu_l / (ntarget * sqdeg_per_std)
+        return (dz_g / dz_l) * nuInu_l / (n_target * sqdeg_per_std)
 
-    def get_xcorr_chan_line(self,channel,zbin=None,ntarget=None,btarget=None,\
-                            line='Ha'):
+    def get_xcorr_chan_line(self,channel,zbin=None,n_target=None,\
+                            b_target=None,line='Ha'):
         """
         Compute cross power between galaxies and EBL, summing shot and linear
         regimes, for a single spectral channel and single emission line.
@@ -571,10 +615,10 @@ class ToyGalaxyPopulation(object):
         channel : np.ndarray
             Two-element array containing the spectral channel bin edges
             [micron].
-        ntarget : int, float
+        n_target : int, float
             Surface density of galaxies in target sample, i.e., galaxies we're
             cross correlating with [# / deg^2].
-        btarget : int, float
+        b_target : int, float
             Linear bias of target galaxies.
         zbin : np.ndarray
             Two-element array containing the redshift bin edges. If this is
@@ -583,14 +627,15 @@ class ToyGalaxyPopulation(object):
         line : str
             Name of emission line of interest, e.g., 'Ha', 'Hb', 'OIII', etc.
         """
-        ntarget, btarget = self.get_target_prop(zbin,ntarget,btarget)
+        n_target, b_target = self.get_target_prop(zbin,n_target,b_target)
 
-        ps_2h = self.get_xpower_2h(channel,ntarget,btarget,zbin=zbin,line=line)
-        ps_sh = self.get_xpower_shot(channel,ntarget,zbin=zbin,line=line)
+        ps_2h = self.get_xpower_2h(channel,n_target,b_target,zbin=zbin,\
+                                   line=line)
+        ps_sh = self.get_xpower_shot(channel,n_target,zbin=zbin,line=line)
 
         return ps_sh + ps_2h
 
-    def get_xcorr_chan(self,channel,zbins,ntarget=None,btarget=None,\
+    def get_xcorr_chan(self,channel,zbins,n_target=None,b_target=None,\
                        include_lines=['Ha']):
         """
         Compute cross power for a single channel, including contributions from
@@ -605,9 +650,9 @@ class ToyGalaxyPopulation(object):
         ps = np.zeros(zbins.shape[0])
         for line in include_lines:
             for j, zbin in enumerate(zbins):
-                n, b = self.get_target_prop(zbin,ntarget,btarget)
+                n, b = self.get_target_prop(zbin,n_target,b_target)
                 ps[j] += self.get_xcorr_chan_line(channel,zbin=zbin,\
-                                                  ntarget=n,btarget=b,\
+                                                  n_target=n,b_target=b,\
                                                   line=line)
         return ps
 
@@ -616,7 +661,7 @@ class ToyGalaxyPopulation(object):
         Return the key properties of the galaxy population we're cross-
         correlating with.
 
-        .. note :: If `ntarget` or `btarget` are None, will consult with the
+        .. note :: If `n_target` or `b_target` are None, will consult with the
             contents of `self.target_prop` set at initialization time.
 
         Parameters
