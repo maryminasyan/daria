@@ -423,7 +423,7 @@ class ToyGalaxyPopulation(object):
         if dz_g == 0:
             return 0
         else:
-            return 1/(dz_g * n_target)
+            return 1/(dz_g * n_target * sqdeg_per_std)
 
     def get_gal_ps_chan(self,zbin,n_target=None,b_target=None):
         """
