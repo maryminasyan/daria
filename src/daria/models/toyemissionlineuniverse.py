@@ -224,6 +224,53 @@ class ToyEmissionLineUniverse(object):
             conversion = 1
         return ps * conversion
 
+    def get_conti_ps_tot(self,ell,zbins,channels,continuum_model,\
+                         output='cell',**kwargs):
+        conti_ps_mtx = np.zeros((channels.shape[0],ell.size))
+        zbins_c = np.mean(zbins,axis=1)
+        channels_c = np.mean(channels,axis=1)
+        for j, wl in enumerate(channels_c):
+            for i, zbin in enumerate(zbins):
+                z = zbins_c[i]
+                if z == 0:
+                    continue
+                self.update_pop_z(z)
+                _ell_ = self.pop.get_ell(z)
+                ps_2h_z = self.pop.get_conti_power_2h(zbin,wl,\
+                                                      continuum_model,\
+                                                      **kwargs)
+                conti_ps_mtx[j,:] += np.interp(ell,_ell_,ps_2h_z)
+            ps_shot_wl = continuum_model.Clsh(wl,**kwargs)
+            conti_ps_mtx[j,:] += ps_shot_wl
+
+        conti_ps_mtx = self.__convert_output(conti_ps_mtx,ell,output=output)
+
+        return conti_ps_mtx
+
+    def get_conti_xcorr_tot(self,ell,channels,zbins,continuum_model,\
+                            output='cell',**kwargs):
+        conti_xcorr_mtx = np.zeros((channels.shape[0],zbins.shape[0],ell.size))
+
+        zbins_c = np.mean(zbins,axis=1)
+        wls = np.mean(channels,axis=1)
+        for j, zbin in enumerate(zbins):
+            z = zbins_c[j]
+            if z == 0:
+                continue
+            self.update_pop_z(z)
+            _ell_ = self.pop.get_ell(z)
+            n, b = self.pop.get_target_prop(zbin,None,None)
+            for i, wl in enumerate(wls):
+                ps = self.pop.get_conti_xcorr_chan(zbin,wl,continuum_model,\
+                                                   n_target=n,b_target=b,\
+                                                   **kwargs)
+                conti_xcorr_mtx[j,i,:] = np.interp(ell,_ell_,ps)
+
+        conti_xcorr_mtx = self.__convert_output(conti_xcorr_mtx,ell,\
+                                                output=output)
+        
+        return conti_xcorr_mtx
+    
     def get_gal_ps_tot(self,ell,zbins,output='cell'):
         """
         Compute the auto power spectrum of the target galaxies for all

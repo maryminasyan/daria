@@ -401,6 +401,54 @@ class ToyGalaxyPopulation(object):
         self.hmf.update(z=z)
         return self.hmf.power / self.h**3
 
+    def get_conti_xcorr_2h(self,zbin,wl,continuum_model,b_target,**kwargs):
+        z = np.mean(zbin)
+        if z == 0:
+            return np.zeros_like(self.hmf.k)
+        else:
+            H, chi = self.get_Hcm_and_chi(z)
+            pmm = self.get_pmm(z)
+            dz = zbin[1] - zbin[0]
+            dnuInu_dz = continuum_model.dnuInu_dz(z,wl,**kwargs)
+            bI = continuum_model.bI(z)
+            return (H / c / chi**2) * b_target * bI * dnuInu_dz * pmm
+
+    def get_conti_xcorr_shot(self,zbin,wl,continuum_model,n_target,**kwargs):
+        z = np.mean(zbin)
+        if z == 0:
+            return 0
+        else:
+            dz = zbin[1] - zbin[0]
+            dn_dz_dsr = n_target * sqdeg_per_std
+            dnuInu_dz = continuum_model.dnuInu_dz(z,wl,**kwargs)
+            return dz * dnuInu_dz / dn_dz_dsr
+
+    def get_conti_xcorr_chan(self,zbin,wl,continuum_model,n_target=None,\
+                             b_target=None,**kwargs):
+        n_target,b_target = self.get_target_prop(zbin,n_target,b_target)
+        ps_2h = self.get_conti_xcorr_2h(zbin,wl,continuum_model,b_target,\
+                                        **kwargs)
+        ps_sh = self.get_conti_xcorr_shot(zbin,wl,continuum_model,n_target,\
+                                          **kwargs)
+        return ps_2h + ps_sh
+            
+    def get_conti_power_2h(self,zbin,wl,continuum_model,**kwargs):
+        """
+        Auto 2-halo (linear) power of continuum-only EBL. User must supply
+        a continuum model with the functions dnuInu_dz(z,wl,**kwargs) and
+        bI(z).
+        """
+        z = np.mean(zbin)
+        if z == 0:
+            return np.zeros_like(self.hmf.k)
+        else:
+            H, chi = self.get_Hcm_and_chi(z)
+            pmm = self.get_pmm(z)
+            dz = zbin[1] - zbin[0]
+            dnuInu_dz = continuum_model.dnuInu_dz(z,wl,**kwargs)
+            bI = continuum_model.bI(z)
+            return dz * (H / c / chi**2) * (dnuInu_dz * bI)**2 * pmm
+
     def get_gal_2h(self,zbin,b_target):
         """
         Auto 2-halo (linear) clustering of target galaxies.
