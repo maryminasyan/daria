@@ -264,7 +264,7 @@ class ToyEmissionLineUniverse(object):
                 ps = self.pop.get_conti_xcorr_chan(zbin,wl,continuum_model,\
                                                    n_target=n,b_target=b,\
                                                    **kwargs)
-                conti_xcorr_mtx[j,i,:] = np.interp(ell,_ell_,ps)
+                conti_xcorr_mtx[i,j,:] = np.interp(ell,_ell_,ps)
 
         conti_xcorr_mtx = self.__convert_output(conti_xcorr_mtx,ell,\
                                                 output=output)
