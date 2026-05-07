@@ -193,7 +193,8 @@ class ToyEmissionLineUniverse(object):
         """
         for attr in self.zdep_attrs:
             setattr(self.pop,attr,getattr(self,f'get_{attr}')(z))
-
+        self.pop.hmf.update(z=z)
+        
     def get_sfr(self,z):
         self.update_pop_z(z)
         return self.pop.get_sfr(self.pop.m)

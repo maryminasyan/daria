@@ -63,12 +63,18 @@ class ToyGalaxyPopulation(object):
 
     def exponentiate(self,log_quantity):
         return 10**log_quantity
-
-    def get_integration_bounds(self):
+        
+    def get_integration_bounds(self,cross_shot=False):
         m = self.m
-        mmin = self.exponentiate(self.mmin)
-        mask = self.exponentiate(self.mask)
-        ok = np.logical_and(m >= mmin, m < mask)
+        if cross_shot:
+            ''' For the cross-shot term, we only want to know the emissivity
+            from the target galaxies, so we only integrate down to the
+            limiting magnitude of that population. '''
+            mlo = self.exponentiate(self.mlim)
+        else:
+            mlo = self.exponentiate(self.mmin)
+        mhi = self.exponentiate(self.mask)
+        ok = np.logical_and(m >= mlo, m < mhi)
         return m[ok], ok
     
     @property
@@ -296,12 +302,12 @@ class ToyGalaxyPopulation(object):
 
         return top / bot
 
-    def get_nuInu(self,z,line='Ha'):
+    def get_nuInu(self,z,line='Ha',cross_shot=False):
         """
         Compute the line emissivity (nW/m^2/sr) at redshift `z`.
         """
         self.hmf.update(z=z)
-        m_use, ok = self.get_integration_bounds()
+        m_use, ok = self.get_integration_bounds(cross_shot=cross_shot)
 
         H, chi = self.get_Hcm_and_chi(z)
         nu = self.get_freq_line(line)                           # Hz
@@ -648,7 +654,7 @@ class ToyGalaxyPopulation(object):
         if (dz_g == 0) or (dz_l == 0):
             return np.zeros_like(self.hmf.k)
 
-        nuInu_l = self.get_nuInu(z,line=line)
+        nuInu_l = self.get_nuInu(z,line=line,cross_shot=True)
 
         return (dz_g / dz_l) * nuInu_l / (n_target * sqdeg_per_std)
 
