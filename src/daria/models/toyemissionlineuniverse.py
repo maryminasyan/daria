@@ -13,8 +13,9 @@ class ToyEmissionLineUniverse(object):
     correction, whereas the ToyGalaxyPopulation does not explicitly deal
     in redshift evolution.
     """
-    def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=11,\
-                 mask=12,include_lines='all',mmin_0=8,mmin_z=0,\
+    def __init__(self,target_prop=None,metal_line_model='l_sfr',\
+                 continuum_model=None,
+                 include_lines='all',mmin_0=8,mmin_z=0,\
                  rturn=1,norm_sfr_0=-4,norm_sfr_a=2.5,norm_sfr_z=0,\
                  mbreak_sfr=12,slope_lo_sfr=1.5,slope_hi_sfr=0.5,\
                  norm_Av_0=1,norm_Av_z=0.2,slope_Av=0.1,**kwargs):
@@ -59,8 +60,17 @@ class ToyEmissionLineUniverse(object):
         """
         self.target_prop = target_prop
         self.metal_line_model = mt.get_metal_line_model(metal_line_model)
-        self.mlim = mt.get_mlim(mlim)
-        self.mask = mt.get_mask(mask)
+        self.continuum_model = continuum_model
+        if continuum_model is None:
+            mlim = kwargs.pop('mlim',None)
+            mask = kwargs.pop('mask',None)
+            self.mlim = mt.get_mlim(mlim)
+            self.mask = mt.get_mask(mask)
+        else:
+            self.mask_mag = kwargs.pop('mask_mag',None)
+            self.mask_wl = kwargs.pop('mask_wl',1)
+        #self.mlim = mt.get_mlim(mlim)
+        #self.mask = mt.get_mask(mask)
         if include_lines == 'all':
             self.include_lines = line_names
         else:
@@ -97,17 +107,18 @@ class ToyEmissionLineUniverse(object):
         init_args.update(**kwargs)
         self.init_args = init_args
         self.init_kwargs = kwargs # Also need kwargs saved separately
-
+            
         # Initialize `pop` with these args so it has corresponding `init_args`
         self.pop = ToyGalaxyPopulation(target_prop=self.target_prop,\
                                        metal_line_model=self.metal_line_model,\
-                                       mlim=self.mlim,mask=self.mask,\
+                                       mlim=None,mask=None,\
                                        mmin=self.mmin_0,rturn=self.rturn,\
                                        norm_sfr=self.norm_sfr_0,\
                                        slope_lo_sfr=self.slope_lo_sfr,\
                                        slope_hi_sfr=self.slope_hi_sfr,\
                                        norm_Av=self.norm_Av_0,\
                                        slope_Av=self.slope_Av,**kwargs)
+        self.update_pop_z(0) # hacky way to assign correct mlim and mask...
 
     def update(self,**kwargs):
         """
@@ -179,6 +190,37 @@ class ToyEmissionLineUniverse(object):
             self.norm_sfr_a * (1. - a) + self.norm_sfr_z * z
         return norm_sfr
 
+    def get_mlim_and_mask(self,z):
+        conti = self.continuum_model
+        if conti is None:
+            return self.mlim, self.mask
+        else:
+            self.pop.hmf.update(z=z)
+            Mhs = self.pop.m
+            dndlnm = self.pop.hmf.dndlnm
+            dlnMh = np.log(Mhs[1]) - np.log(Mhs[0])
+            bh = self.pop.get_halo_bias(z)
+            # assuming that ng_mask will not vary with wl.
+            ng_mask = conti.get_mask_th(z,self.mask_wl,self.mask_mag,\
+                                        self.mask_wl)[1]
+            # -- fix line below to be more generic!!
+            # also, ... wl?
+            ng_lim = self.target_prop['dndV'](z) / self.pop.h**3 # [(h/Mpc)^3]
+            
+            def get_logMh(ng):
+                if np.sum(dlnMh * dndlnm) < ng:
+                    return -np.inf
+                elif dlnMh * dndlnm[-1] > ng:
+                    return np.inf
+                else:
+                    idx = np.argmin(np.abs(np.cumsum(dlnMh * dndlnm[::-1]) \
+                                           - ng)) + 1
+                    return np.log10(Mhs[::-1][idx])
+
+            mask = get_logMh(ng_mask)
+            mlim = get_logMh(ng_lim)
+            return mlim, mask
+            
     def update_pop_z(self,z):
         """
         Perform redshift scaling on any relevant parameters in
@@ -194,6 +236,9 @@ class ToyEmissionLineUniverse(object):
         for attr in self.zdep_attrs:
             setattr(self.pop,attr,getattr(self,f'get_{attr}')(z))
         self.pop.hmf.update(z=z)
+        mlim, mask = self.get_mlim_and_mask(z)
+        self.pop.mlim = mlim
+        self.pop.mask = mask
         
     def get_sfr(self,z):
         self.update_pop_z(z)
@@ -225,52 +270,70 @@ class ToyEmissionLineUniverse(object):
             conversion = 1
         return ps * conversion
 
-    def get_conti_ps_tot(self,ell,zbins,channels,continuum_model,\
+    def get_conti_ps_tot(self,ell,zbins,channels,\
                          output='cell',**kwargs):
         conti_ps_mtx = np.zeros((channels.shape[0],ell.size))
-        zbins_c = np.mean(zbins,axis=1)
-        channels_c = np.mean(channels,axis=1)
-        for j, wl in enumerate(channels_c):
-            for i, zbin in enumerate(zbins):
-                z = zbins_c[i]
+        conti = self.continuum_model
+        if conti is None:
+            return conti_ps_mtx
+        else:
+            zbins_c = np.mean(zbins,axis=1)
+            channels_c = np.mean(channels,axis=1)
+            for j, wl in enumerate(channels_c):
+                for i, zbin in enumerate(zbins):
+                    z = zbins_c[i]
+                    if z == 0:
+                        continue
+                    self.update_pop_z(z)
+                    # make more general !!!
+                    ng_shot = self.target_prop['dndV'](z) / self.pop.h**3
+                    _ell_ = self.pop.get_ell(z)
+                    ps_2h_z = self.pop.get_conti_power_2h(zbin,wl,conti,\
+                                                          m_th_ref=\
+                                                          self.mask_mag,\
+                                                          wl_obs_th_ref=\
+                                                          self.mask_wl,\
+                                                          ng_shot=ng_shot,\
+                                                          **kwargs)
+                    conti_ps_mtx[j,:] += np.interp(ell,_ell_,ps_2h_z)
+                ps_shot_wl = conti.Clsh(wl,m_th_ref=self.mask_mag,\
+                                        wl_obs_th_ref=self.mask_wl,**kwargs)
+                conti_ps_mtx[j,:] += ps_shot_wl
+
+            conti_ps_mtx = self.__convert_output(conti_ps_mtx,ell,\
+                                                 output=output)
+            return conti_ps_mtx
+
+    def get_conti_xcorr_tot(self,ell,channels,zbins,\
+                            output='cell',**kwargs):
+        conti_xcorr_mtx = np.zeros((channels.shape[0],zbins.shape[0],ell.size))
+        conti = self.continuum_model
+        if conti is None:
+            return conti_xcorr_mtx
+        else:
+            zbins_c = np.mean(zbins,axis=1)
+            wls = np.mean(channels,axis=1)
+            for j, zbin in enumerate(zbins):
+                z = zbins_c[j]
                 if z == 0:
                     continue
                 self.update_pop_z(z)
                 _ell_ = self.pop.get_ell(z)
-                ps_2h_z = self.pop.get_conti_power_2h(zbin,wl,\
-                                                      continuum_model,\
-                                                      **kwargs)
-                conti_ps_mtx[j,:] += np.interp(ell,_ell_,ps_2h_z)
-            ps_shot_wl = continuum_model.Clsh(wl,**kwargs)
-            conti_ps_mtx[j,:] += ps_shot_wl
+                n, b = self.pop.get_target_prop(zbin,None,None)
+                ng_shot = self.target_prop['dndV'] / self.pop.h**3
+                for i, wl in enumerate(wls):
+                    ps = self.pop.get_conti_xcorr_chan(zbin,wl,conti,\
+                                                       n_target=n,b_target=b,\
+                                                       m_th_ref=self.mask_mag,\
+                                                       wl_obs_th_ref=\
+                                                       self.mask_wl,\
+                                                       ng_shot=ng_shot,\
+                                                       **kwargs)
+                    conti_xcorr_mtx[i,j,:] = np.interp(ell,_ell_,ps)
 
-        conti_ps_mtx = self.__convert_output(conti_ps_mtx,ell,output=output)
-
-        return conti_ps_mtx
-
-    def get_conti_xcorr_tot(self,ell,channels,zbins,continuum_model,\
-                            output='cell',**kwargs):
-        conti_xcorr_mtx = np.zeros((channels.shape[0],zbins.shape[0],ell.size))
-
-        zbins_c = np.mean(zbins,axis=1)
-        wls = np.mean(channels,axis=1)
-        for j, zbin in enumerate(zbins):
-            z = zbins_c[j]
-            if z == 0:
-                continue
-            self.update_pop_z(z)
-            _ell_ = self.pop.get_ell(z)
-            n, b = self.pop.get_target_prop(zbin,None,None)
-            for i, wl in enumerate(wls):
-                ps = self.pop.get_conti_xcorr_chan(zbin,wl,continuum_model,\
-                                                   n_target=n,b_target=b,\
-                                                   **kwargs)
-                conti_xcorr_mtx[i,j,:] = np.interp(ell,_ell_,ps)
-
-        conti_xcorr_mtx = self.__convert_output(conti_xcorr_mtx,ell,\
-                                                output=output)
-        
-        return conti_xcorr_mtx
+            conti_xcorr_mtx = self.__convert_output(conti_xcorr_mtx,ell,\
+                                                    output=output)
+            return conti_xcorr_mtx
     
     def get_gal_ps_tot(self,ell,zbins,output='cell'):
         """
