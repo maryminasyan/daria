@@ -652,7 +652,7 @@ class ToyGalaxyPopulation(object):
         z, dz_g, dz_l, dz_gl = self.get_z_dz(channel,line,zbin=zbin)
 
         if (dz_g == 0) or (dz_l == 0):
-            return np.zeros_like(self.hmf.k)
+            return 0
 
         nuInu_l = self.get_nuInu(z,line=line,cross_shot=True)
 

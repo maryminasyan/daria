@@ -101,7 +101,9 @@ class ToyEmissionLineUniverse(object):
         updated. '''
         init_args = {key:value for key, value in locals().items() \
                      if key not in ['self','target_prop','metal_line_model',\
-                                    'mlim','mask','include_lines','kwargs']}
+                                    'continuum_model','mlim','mask',\
+                                    'mask_mag','mask_wl','include_lines',\
+                                    'kwargs']}
 
         # Add individual kwargs entries; assume user defined them correctly...
         init_args.update(**kwargs)
@@ -320,7 +322,7 @@ class ToyEmissionLineUniverse(object):
                 self.update_pop_z(z)
                 _ell_ = self.pop.get_ell(z)
                 n, b = self.pop.get_target_prop(zbin,None,None)
-                ng_shot = self.target_prop['dndV'] / self.pop.h**3
+                ng_shot = self.target_prop['dndV'](z) / self.pop.h**3
                 for i, wl in enumerate(wls):
                     ps = self.pop.get_conti_xcorr_chan(zbin,wl,conti,\
                                                        n_target=n,b_target=b,\
