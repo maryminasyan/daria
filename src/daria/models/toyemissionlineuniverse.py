@@ -452,9 +452,16 @@ class ToyEmissionLineUniverse(object):
 
         return ps_mtx
 
-    def get_ebl_ps(self,scales,waves,waves2=None,zbins=None,xcorr_mask=None,\
-                   wave_units='mic',scale_units='ell',flux_units='si',\
-                   **kwargs):
+    def get_ebl_xcorr(self,scales,waves,zbins,xcorr_mask=None,\
+                      wave_units='mic',scale_units='ell',flux_units='si',\
+                      **kwargs):
+        # 3d array of shape (waves, zbins, scales)
+        ps_tot = self.get_xcorr_tot(scales,waves,zbins,xcorr_mask=xcorr_mask,\
+                                    sum_lines=True)
+        return ps_tot
+    
+    def get_ebl_ps(self,scales,waves,waves2=None,wave_units='mic',\
+                   scale_units='ell',flux_units='si',**kwargs):
         """
         Get EBL power spectrum.
 
@@ -467,28 +474,16 @@ class ToyEmissionLineUniverse(object):
         waves2 : np.ndarray
             Spectral channel definitions of 2nd channel, in the case of
             internal crosses. If defined, should have the same dimensions as
-            `waves`. Defaults to `None` and currently not supported.
-        zbins : np.ndarray
-            Redshift bins, if computing galaxy cross spectra. Defaults to
-            `None` (internal autos or crosses).
-        xcorr_mask : np.ndarray
-            Mask for galaxy cross spectra.
+            `waves`. 
+        
 
         Returns
         -------
         ps_tot : np.ndarray
             Total EBL power spectrum, with shape (len(scales),len(waves))
         """
-        if zbins is None: # Internal autos or crosses
-            # note that only autos are computed ...
-            # This is a 3D array of shape (waves,waves,scales)
-            ps_tot = self.get_ps_tot(scales,waves,sum_lines=True)
-
-            # Autos -- only want diag. elements, with shape (scales, waves)
-            ps_tot = ps_tot.diagonal()
-        else: # Galaxy crosses
-            # This is a 3D array of shape (waves,zbins,scales)
-            ps_tot = self.get_xcorr_tot(scales,waves,zbins,\
-                                        xcorr_mask=xcorr_mask,sum_lines=True)
-
+        # can only handle autos for now
+        ps_tot = self.get_ps_tot(scales,waves,sum_lines=True)
+        ps_tot = ps_tot.diagonal()
         return ps_tot
+
