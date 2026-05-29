@@ -458,6 +458,9 @@ class ToyEmissionLineUniverse(object):
         # 3d array of shape (waves, zbins, scales)
         ps_tot = self.get_xcorr_tot(scales,waves,zbins,xcorr_mask=xcorr_mask,\
                                     sum_lines=True)
+        # change to shape (scales, waves, zbins)
+        # (reformat to move scales from axis=2 to axis=0)
+        ps_tot = np.moveaxis(ps_tot,2,0)
         return ps_tot
     
     def get_ebl_ps(self,scales,waves,waves2=None,wave_units='mic',\
