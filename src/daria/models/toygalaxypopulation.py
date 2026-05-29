@@ -250,13 +250,83 @@ class ToyGalaxyPopulation(object):
         self.hmf.update(z=z)
         m = self.m
 
-        lum = self.get_lum_line(m,line=line)
-        dlnmdlog10l = np.diff(np.log10(lum)) / np.diff(np.log(m))
-        focc = self.get_focc(m[0:-1])
-        dndlnm = self.hmf.dndlnm[0:-1] * self.h**3
+        log10lum = np.log10(self.get_lum_line(m,line=line))
+        dlog10lum = np.diff(log10lum)
 
-        lf = dndlnm * dlnmdlog10l * focc
-        return np.log10(lum)[0:-1], lf
+        ''' The relationship between line luminosity and halo mass can be
+        double- or even triple-valued depending on the strength of dust
+        attenuation. If it is monotonic, we have a straightforward mapping
+        from the halo mass function to the line luminosity function. Otherwise,
+        we must handle the luminosity function more carefully by splitting
+        it into chunks where the line luminosity vs. halo mass relation
+        increases/decreases. '''
+        if np.all(dlog10lum > 0):
+            # monotonically increasing; ideal case
+            dlnmdlog10l = np.diff(np.log(m)) / dlog10lum
+            focc = self.get_focc(m[0:-1])
+            dndlnm = self.hmf.dndlnm[0:-1] * self.h**3
+            lf = dndlnm * dlnmdlog10l * focc
+            return log10lum[0:-1], lf
+        else:
+            # double/triple-valued behavior
+            decreasing_idxs = np.where(dlog10lum < 0)[0]
+            triple_valued = np.max(decreasing_idxs) < (len(log10lum)-2)
+
+            ''' Compute the luminosity function in each chunk. Add regions
+            across chunks with overlapping luminosities to get all the halos
+            contributing to those bins. '''
+            chunk1_idxs = np.arange(0,np.min(decreasing_idxs)+1)
+            chunk2_idxs = np.arange(np.min(decreasing_idxs),\
+                                    np.max(decreasing_idxs)+2)
+            chunks = [chunk1_idxs,chunk2_idxs]
+            if triple_valued:
+                chunk3_idxs = np.arange(np.max(decreasing_idxs)+1,\
+                                        len(log10lum))
+                chunks.append(chunk3_idxs)
+                
+            focc = self.get_focc(m)
+            dndlnm = self.hmf.dndlnm * focc * self.h**3
+            dlnm = np.diff(np.log(m))[0] # even spacing
+            dn = dndlnm * dlnm
+
+            def get_dn_at_lnm(lnm):
+                return np.interp(lnm,np.log(m),dn)
+
+            log10lum_fin = np.linspace(np.min(log10lum),
+                                       np.max(log10lum),
+                                       num=2000)
+            dn_fin = np.zeros_like(log10lum_fin)
+            
+            for chunk_idxs in chunks:
+                lnm_chunk = np.log(m[chunk_idxs])
+                log10lum_chunk = log10lum[chunk_idxs]
+                dn_chunk = get_dn_at_lnm(lnm_chunk)
+
+                increasing = ((log10lum_chunk[1] - log10lum_chunk[0]) > 0)
+                def get_lnm_at_log10lum(log10l):
+                    if increasing:
+                        return np.interp(log10l,log10lum_chunk,lnm_chunk)
+                    else:
+                        ''' np interp handles monotonically increasing
+                        functions. So if luminosity decreases with halo mass,
+                        flip the relation and then flip the interpolated
+                        result again for the correct lnm. '''
+                        return np.flip(np.interp(log10l,\
+                                                 np.flip(log10lum_chunk),\
+                                                 lnm_chunk))
+                
+                fin_idxs = np.logical_and(log10lum_fin >= \
+                                          np.min(log10lum_chunk),\
+                                          log10lum_fin <= \
+                                          np.max(log10lum_chunk))
+                                                                 
+                log10lum_chunk_fin = log10lum_fin[fin_idxs]
+                lnm_chunk_fin = get_lnm_at_log10lum(log10lum_chunk_fin)
+                dn_fin[fin_idxs] += get_dn_at_lnm(lnm_chunk_fin)
+
+            dlog10lum_fin = np.diff(log10lum_fin)[0] # even spacing
+            dndlog10lum_fin = dn_fin / dlog10lum_fin
+            return log10lum_fin, dndlog10lum_fin
 
     def get_log_lum_ratio(self,m,line_top,line_bot):
         """
