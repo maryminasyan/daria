@@ -10,7 +10,7 @@ from . import model_tools as mt
 class ToyGalaxyPopulation(object):
     def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=11,\
                  mask=12,mmin=8,rturn=1,norm_sfr=-4,mbreak_sfr=12,\
-                 slope_lo_sfr=1.5,slope_hi_sfr=0.5,norm_Av=1.,slope_Av=0.5,\
+                 slope_lo_sfr=1.5,slope_hi_sfr=0.5,norm_Av=1.,slope_Av=0.1,\
                  **kwargs):
         """
         Note - mlim, mask, mmin, and norm_sfr are all LOG quantities.
