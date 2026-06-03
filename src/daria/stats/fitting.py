@@ -113,16 +113,17 @@ def lnpost(x, *args):
 
             lnL += -0.5 * np.sum((ps_dat - ps_mod)**2 / ps_err**2)
 
-    ##
-    # Line LFs
+    # currently takes a single compilation of line LFs
+    # format of lf_Ha: {'z1': {'log10L', 'phi', 'phi_err'}, 'z2' ... }
     if 'lf_Ha' in data:
-        z_Ha = data['lf_Ha_z']
-        logL_Ha = data['lf_Ha_logL']
+        lf_Ha = data['lf_Ha']
+        z_Ha = list(lf_Ha.keys())
         for i, z in enumerate(z_Ha):
+            lf_z = lf_Ha[z]
             logL, phi = model.get_lf_line(z=z, line='Ha')
-            ymod_lf = np.interp(logL_Ha, logL, np.log10(phi))
-            _lnL = -0.5 * (data['lf_Ha'][i,:] - ymod_lf)**2 \
-                / data['lf_Ha_err'][i,:]**2
+            ymod_lf = np.interp(lf_z['log10L'], logL, np.log10(phi))
+            _lnL = -0.5 * (lf_z['phi'] - ymod_lf)**2 \
+                / lf_z['phi_err']**2
 
             lnL += np.sum(_lnL)
 
