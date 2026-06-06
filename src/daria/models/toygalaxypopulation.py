@@ -270,6 +270,15 @@ class ToyGalaxyPopulation(object):
         else:
             # double/triple-valued behavior
             decreasing_idxs = np.where(dlog10lum < 0)[0]
+
+            ''' Sometimes you may run into models where luminosity decreases
+            as halo mass increases, starting from the smallest halos. For
+            now I am intervening with a workaround to avoid/penalize these
+            models when running inference. '''
+            if decreasing_idxs[0] == 0:
+                return np.array([-np.inf,np.inf]), \
+                    np.array([-np.inf,-np.inf])
+            
             triple_valued = np.max(decreasing_idxs) < (len(log10lum)-2)
 
             ''' Compute the luminosity function in each chunk. Add regions
@@ -301,8 +310,8 @@ class ToyGalaxyPopulation(object):
                 lnm_chunk = np.log(m[chunk_idxs])
                 log10lum_chunk = log10lum[chunk_idxs]
                 dn_chunk = get_dn_at_lnm(lnm_chunk)
-
                 increasing = ((log10lum_chunk[1] - log10lum_chunk[0]) > 0)
+                
                 def get_lnm_at_log10lum(log10l):
                     if increasing:
                         return np.interp(log10l,log10lum_chunk,lnm_chunk)

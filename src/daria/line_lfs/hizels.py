@@ -3,8 +3,9 @@ import numpy as np
 class HIZELS(object):
     ''' Store and retrieve HiZELS Ha luminosity functions. Data from Sobral
     et al. 2013. '''
-    def __init__(self):
+    def __init__(self,dust=False):
         self.Av = 1
+        self.dust = dust
         self.include_NII = False
         self.line = 'Ha'
         self.z = [0.4,0.84,1.47,2.23]
@@ -61,11 +62,11 @@ class HIZELS(object):
     def get_dust_transmission(self):
         return 10**(-self.Av/2.5)
     
-    def __get_attr_array(self,attr_name,idx,dust=False):
-        attr = np.array(getattr(self,attr_name))
-        if (attr_name == 'log10L') and dust:
+    def __get_attr_array(self,attr_name,idx):
+        attr = np.array(getattr(self,attr_name)[idx])
+        if (attr_name == 'log10L') and self.dust:
             transmission = self.get_dust_transmission()
-            attr *= transmission
+            attr += np.log10(transmission) # (negative)
         return attr
     
     def dict_keys(self):
@@ -77,12 +78,10 @@ class HIZELS(object):
         for i, z in enumerate(self.z):
             z_dict = {}
             for key in z_dict_keys:
-                z_dict[key] = self.__get_attr_array(key,i,dust=dust)
+                z_dict[key] = self.__get_attr_array(key,i)
             data[z] = z_dict
         return data
 
-    def label(self,dust=False):
-        label = 'hizels'
-        if dust:
-            label += '_dust'
-        return label
+    def label(self):
+        dust_str = '_dust' if self.dust else ''
+        return f'hizels{dust_str}'
