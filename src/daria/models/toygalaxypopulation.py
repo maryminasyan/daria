@@ -30,8 +30,7 @@ class ToyGalaxyPopulation(object):
         self.rturn = rturn
         self.norm_sfr = norm_sfr
         self.mbreak_sfr = mbreak_sfr
-        self.slope_lo_sfr = slope_lo_sfr
-        self.slope_hi_sfr = slope_hi_sfr
+        mt.set_slope_sfr(self,slope_lo_sfr,slope_hi_sfr) # bookkeeping
         self.norm_Av = norm_Av
         self.slope_Av = slope_Av
 
@@ -60,6 +59,7 @@ class ToyGalaxyPopulation(object):
         properly to avoid messy errors from potential inconsistencies, etc.
         """
         mt.set_attrs(self,self.init_args,overwrite=True,**kwargs)
+        mt.set_slope_sfr(self,self.slope_lo_sfr,self.slope_hi_sfr)
 
     def exponentiate(self,log_quantity):
         return 10**log_quantity

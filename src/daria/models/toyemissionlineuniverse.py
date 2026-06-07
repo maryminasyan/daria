@@ -84,8 +84,7 @@ class ToyEmissionLineUniverse(object):
         self.norm_sfr_a = norm_sfr_a
         self.norm_sfr_z = norm_sfr_z
         self.mbreak_sfr = mbreak_sfr
-        self.slope_lo_sfr = slope_lo_sfr
-        self.slope_hi_sfr = slope_hi_sfr
+        mt.set_slope_sfr(self,slope_lo_sfr,slope_hi_sfr) # bookkeeping
         self.norm_Av_0 = norm_Av_0
         self.norm_Av_z = norm_Av_z
         self.slope_Av = slope_Av
@@ -116,6 +115,7 @@ class ToyEmissionLineUniverse(object):
                                        mlim=None,mask=None,\
                                        mmin=self.mmin_0,rturn=self.rturn,\
                                        norm_sfr=self.norm_sfr_0,\
+                                       mbreak_sfr=self.mbreak_sfr,\
                                        slope_lo_sfr=self.slope_lo_sfr,\
                                        slope_hi_sfr=self.slope_hi_sfr,\
                                        norm_Av=self.norm_Av_0,\
@@ -138,7 +138,8 @@ class ToyEmissionLineUniverse(object):
             '\nPlease only provide args for ToyEmissionLineUniverse!'
 
         mt.set_attrs(self,self.init_args,overwrite=True,**kwargs)
-
+        mt.set_slope_sfr(self,self.slope_lo_sfr,self.slope_hi_sfr)
+        
         # Also need to update `ToyGalaxyPopulation` for consistency.
 
         # 1. Get kwargs that have exact matches for `ToyGalaxyPopulation` args

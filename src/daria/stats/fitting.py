@@ -29,6 +29,10 @@ def lnprior(x, *args):
 
     kwargs = args_to_kwargs(x, params)
 
+    if 'slope_lo_sfr' and 'slope_hi_sfr' in params:
+        if kwargs['slope_lo_sfr'] > kwargs['slope_hi_sfr']:
+            return -np.inf
+    
     for key in kwargs:
         if priors[key][0] <= kwargs[key] < priors[key][1]:
             continue

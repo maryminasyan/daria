@@ -2,6 +2,16 @@ import numpy as np
 import copy
 from ..utils.line_info import line_rwaves
 
+def set_slope_sfr(obj,slope_lo_sfr,slope_hi_sfr):
+    ''' There is no real distinction between slope_lo_sfr and slope_hi_sfr,
+    which can lead to bimodality when running inference. Assert that
+    slope_lo_sfr <= slope_hi_sfr, so that the model can distinguish between
+    the two at the level of inference. This is just a matter of bookkeeping
+    and will not affect any computations. '''
+    slope_arr = np.array([slope_lo_sfr,slope_hi_sfr])
+    obj.slope_lo_sfr = np.min(slope_arr)
+    obj.slope_hi_sfr = np.max(slope_arr)
+    
 def set_attrs(obj,default_dict,overwrite=False,**kwargs):
     """
     Set attributes for some object `obj`.
@@ -36,7 +46,7 @@ def set_attrs(obj,default_dict,overwrite=False,**kwargs):
         do_overwrite = overwrite and (default_key not in given_keys)
         if do_overwrite or not hasattr(obj,default_key):
             setattr(obj,default_key,default_dict[default_key])
-
+    
 def get_mlim(mlim):
     """
     Get integration bound corresponding to `mlim`, the LOG10 halo mass
