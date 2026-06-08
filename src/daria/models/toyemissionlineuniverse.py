@@ -137,7 +137,7 @@ class ToyEmissionLineUniverse(object):
             'It looks like you provided 1+ args for ToyGalaxyPopulation.'\
             '\nPlease only provide args for ToyEmissionLineUniverse!'
 
-        mt.set_attrs(self,self.init_args,overwrite=True,**kwargs)
+        mt.set_attrs(self,self.init_args,overwrite=False,**kwargs)
         mt.set_slope_sfr(self,self.slope_lo_sfr,self.slope_hi_sfr)
         
         # Also need to update `ToyGalaxyPopulation` for consistency.

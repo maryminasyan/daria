@@ -58,7 +58,7 @@ class ToyGalaxyPopulation(object):
         per thread and overwriting arguments as needed. Make sure to initialize
         properly to avoid messy errors from potential inconsistencies, etc.
         """
-        mt.set_attrs(self,self.init_args,overwrite=True,**kwargs)
+        mt.set_attrs(self,self.init_args,overwrite=False,**kwargs)
         mt.set_slope_sfr(self,self.slope_lo_sfr,self.slope_hi_sfr)
 
     def exponentiate(self,log_quantity):
