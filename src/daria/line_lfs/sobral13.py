@@ -1,6 +1,6 @@
 import numpy as np
 
-class HIZELS(object):
+class Sobral13(object):
     ''' Store and retrieve HiZELS Ha luminosity functions. Data from Sobral
     et al. 2013. '''
     def __init__(self,dust=False):
@@ -84,4 +84,4 @@ class HIZELS(object):
 
     def label(self):
         dust_str = '_dust' if self.dust else ''
-        return f'hizels{dust_str}'
+        return f'sobral13_Ha_{dust_str}'
