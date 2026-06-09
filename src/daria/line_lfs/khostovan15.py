@@ -4,7 +4,7 @@ class Khostovan15(object):
     ''' Store and retrieve HiZELS Hb+[OIII] and [OII] luminosity functions.
     Data from Khostovan et al. 2015 '''
     def __init__(self):
-        self.dust = False
+        self.dust = True
         self.lines = ['HbOIII','OII']
         self.z = [[0.84,1.42,2.23,3.24],\
                   [1.47,2.25,3.34,4.69]]

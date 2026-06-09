@@ -117,23 +117,29 @@ def lnpost(x, *args):
 
             lnL += -0.5 * np.sum((ps_dat - ps_mod)**2 / ps_err**2)
 
-    # currently takes a single compilation of line LFs
-    # format of lf_Ha: {'z1': {'log10L', 'phi', 'phi_err'}, 'z2' ... }
-    if 'lf_Ha' in data:
-        lf_Ha = data['lf_Ha']
-        z_Ha = list(lf_Ha.keys())
-        for i, z in enumerate(z_Ha):
-            lf_z = lf_Ha[z]
-            logL, phi = model.get_lf_line(z=z, line='Ha')
-            ymod_lf = np.interp(lf_z['log10L'], logL, np.log10(phi))
-            _lnL = -0.5 * (lf_z['phi'] - ymod_lf)**2 \
-                / lf_z['phi_err']**2
+    if 'fit_lf_lines' in data:
+        fit_lf_lines = data['fit_lf_lines']
+        lfs = data['line_lfs']
+        for line in fit_lf_lines:
+            if line == 'HbOIII':
+                lines_use = ['Hb','OIII_5007','OIII_4959']
+            elif line == 'HaNII':
+                lines_use = ['Ha','NII']
+            else:
+                lines_use = line
+            lf_l = lfs[line]
+            zs_l = list(lf_l.keys())
+            for z_l in zs_l:
+                lf_l_z = lf_l[z_l]
+                logL, phi = model.get_lf_line(z=z_l,line=lines_use)
+                ymod_lf_l_z = np.interp(lf_l_z['log10L'],logL,np.log10(phi))
+                _lnL = -0.5 * (lf_l_z['phi'] - ymod_lf_l_z)**2 / \
+                    lf_l_z['phi_err']**2
+                lnL += np.sum(_lnL)
 
-            lnL += np.sum(_lnL)
-
-            if np.any(np.isnan(_lnL)):
-                return -np.inf
-
+                if np.any(np.isnan(_lnL)):
+                    return -np.inf
+    
     ##
     # Commenting this check out as it shouldn't be necessary.
     # If we get NaNs, should accept error and troubleshoot from there.

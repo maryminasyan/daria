@@ -184,8 +184,11 @@ class ToyGalaxyPopulation(object):
              (m / mbreak_sfr)**-self.slope_hi_sfr)
 
     def get_focc(self,m):
-        mmin = self.exponentiate(self.mmin)
-        return 1 - np.exp(-(m / mmin)**self.rturn)
+        if self.rturn == np.inf:
+            return 1
+        else:
+            mmin = self.exponentiate(self.mmin)
+            return 1 - np.exp(-(m / mmin)**self.rturn)
 
     def get_sfrd(self,z):
         """
@@ -250,7 +253,15 @@ class ToyGalaxyPopulation(object):
         self.hmf.update(z=z)
         m = self.m
 
-        log10lum = np.log10(self.get_lum_line(m,line=line))
+        if isinstance(line,str):
+            log10lum = np.log10(self.get_lum_line(m,line=line))
+        else:
+            lum = self.get_lum_line(m,line=line[0])
+            for i, line_i in enumerate(line[1:]):
+                lum += self.get_lum_line(m,line=line_i)
+            log10lum = np.log10(lum)
+            del lum
+            
         dlog10lum = np.diff(log10lum)
 
         ''' The relationship between line luminosity and halo mass can be
