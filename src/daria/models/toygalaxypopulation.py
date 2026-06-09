@@ -64,8 +64,9 @@ class ToyGalaxyPopulation(object):
     def exponentiate(self,log_quantity):
         return 10**log_quantity
         
-    def get_integration_bounds(self,cross_shot=False):
+    def get_integration_bounds(self,cross_shot=False,include_mask=True):
         m = self.m
+        # lower bound
         if cross_shot:
             ''' For the cross-shot term, we only want to know the emissivity
             from the target galaxies, so we only integrate down to the
@@ -73,7 +74,11 @@ class ToyGalaxyPopulation(object):
             mlo = self.exponentiate(self.mlim)
         else:
             mlo = self.exponentiate(self.mmin)
-        mhi = self.exponentiate(self.mask)
+        # upper bound
+        if include_mask:
+            mhi = self.exponentiate(self.mask)
+        else:
+            mhi = np.inf
         ok = np.logical_and(m >= mlo, m < mhi)
         return m[ok], ok
     
@@ -190,15 +195,15 @@ class ToyGalaxyPopulation(object):
             mmin = self.exponentiate(self.mmin)
             return 1 - np.exp(-(m / mmin)**self.rturn)
 
-    def get_sfrd(self,z):
+    def get_sfrd(self,z,include_mask=True):
         """
         Returns cosmic star-formation rate density (Msun/yr/cMpc^3) at `z`.
         """
         self.hmf.update(z=z)
-        m = self.m
+        m, ok = self.get_integration_bounds(include_mask=include_mask)
         sfr = self.get_sfr(m)
         focc = self.get_focc(m)
-        dndlnm = self.hmf.dndlnm * self.h**3
+        dndlnm = self.hmf.dndlnm[ok] * self.h**3
         sfrd = np.trapz(dndlnm * sfr * focc, x=np.log(m))
         return sfrd
 
@@ -251,7 +256,7 @@ class ToyGalaxyPopulation(object):
         Compute the line luminosity function at redshift `z`.
         """
         self.hmf.update(z=z)
-        m = self.m
+        m, ok = self.get_integration_bounds(include_mask=False)#self.m
 
         if isinstance(line,str):
             log10lum = np.log10(self.get_lum_line(m,line=line))
@@ -275,7 +280,9 @@ class ToyGalaxyPopulation(object):
             # monotonically increasing; ideal case
             dlnmdlog10l = np.diff(np.log(m)) / dlog10lum
             focc = self.get_focc(m[0:-1])
-            dndlnm = self.hmf.dndlnm[0:-1] * self.h**3
+            dndlnm = self.hmf.dndlnm[ok] * self.h**3
+            dndlnm = dndlnm[0:-1]
+            # dndlnm = self.hmf.dndlnm[ok[0:-1]] * self.h**3
             lf = dndlnm * dlnmdlog10l * focc
             return log10lum[0:-1], lf
         else:
@@ -305,7 +312,7 @@ class ToyGalaxyPopulation(object):
                 chunks.append(chunk3_idxs)
                 
             focc = self.get_focc(m)
-            dndlnm = self.hmf.dndlnm * focc * self.h**3
+            dndlnm = self.hmf.dndlnm[ok] * focc * self.h**3
             dlnm = np.diff(np.log(m))[0] # even spacing
             dn = dndlnm * dlnm
 
@@ -314,7 +321,7 @@ class ToyGalaxyPopulation(object):
 
             log10lum_fin = np.linspace(np.min(log10lum),
                                        np.max(log10lum),
-                                       num=2000)
+                                       num=2000) # num?
             dn_fin = np.zeros_like(log10lum_fin)
             
             for chunk_idxs in chunks:
