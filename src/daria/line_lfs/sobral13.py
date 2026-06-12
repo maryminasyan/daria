@@ -5,6 +5,8 @@ class Sobral13(object):
     et al. 2013. '''
     def __init__(self,dust=False):
         self.Av = 1
+        self.h = 0.7
+        self.planck_h = 0.6766
         self.dust = dust
         self.include_NII = False
         self.line = 'Ha'
@@ -67,6 +69,8 @@ class Sobral13(object):
         if (attr_name == 'log10L') and self.dust:
             transmission = self.get_dust_transmission()
             attr += np.log10(transmission) # (negative)
+        elif attr_name == 'phi':
+            attr += (3*np.log10(self.planck_h/self.h))
         return attr
     
     def dict_keys(self):

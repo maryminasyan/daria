@@ -5,6 +5,8 @@ class Pang26(object):
     2026. '''
     def __init__(self,dust=False):
         self.Av = 1
+        self.h = 0.7
+        self.planck_h = 0.6766
         self.dust = dust
         self.include_NII = True # redundant arg?
         self.line = 'HaNII'
@@ -27,14 +29,22 @@ class Pang26(object):
         return 10**(-self.Av/2.5)
     
     def __get_attr_array(self,attr_name,idx):
-        attr = np.array(getattr(self,attr_name)[idx])
-        if (attr_name == 'log10L') and self.dust:
-            transmission = self.get_dust_transmission()
-            attr += np.log10(transmission) # (negative)
+        if attr_name == 'phi_err':
+            err_lo = self.__get_attr_array('phi_err_lo',idx)
+            err_hi = self.__get_attr_array('phi_err_hi',idx)
+            attr = np.mean([err_lo,err_hi],axis=0)
+        else:
+            attr = np.array(getattr(self,attr_name)[idx])
+            if (attr_name == 'log10L') and self.dust:
+                transmission = self.get_dust_transmission()
+                attr += np.log10(transmission) # (negative)
+            elif attr_name == 'phi':
+                attr += (3*np.log10(self.planck_h/self.h))
+            
         return attr
     
     def dict_keys(self):
-        return ['log10L','phi','phi_err_lo','phi_err_hi']
+        return ['log10L','phi','phi_err']#_lo','phi_err_hi']
     
     def get_data(self,dust=False):
         data = {}

@@ -5,6 +5,8 @@ class Khostovan15(object):
     Data from Khostovan et al. 2015 '''
     def __init__(self):
         self.dust = True
+        self.h = 0.7
+        self.planck_h = 0.6766
         self.lines = ['HbOIII','OII']
         self.z = [[0.84,1.42,2.23,3.24],\
                   [1.47,2.25,3.34,4.69]]
@@ -41,6 +43,8 @@ class Khostovan15(object):
                   
     def __get_attr_array(self,attr_name,idx,line_idx):
         attr = np.array(getattr(self,attr_name)[line_idx][idx])
+        if attr_name == 'phi':
+            attr += (3*np.log10(self.planck_h/self.h))
         return attr
     
     def dict_keys(self):
