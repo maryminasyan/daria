@@ -17,7 +17,8 @@ class ToyEmissionLineUniverse(object):
                  continuum_model=None,
                  include_lines='all',mmin_0=8,mmin_z=0,\
                  rturn=1,norm_sfr_0=-4,norm_sfr_a=2.5,norm_sfr_z=0,\
-                 mbreak_sfr=12,slope_lo_sfr=1.5,slope_hi_sfr=0.5,\
+                 mbreak_sfr_0=12,mbreak_sfr_z=0,slope_lo_sfr=1.5,\
+                 slope_hi_sfr=0.5,\
                  norm_Av_0=1,norm_Av_z=0.2,slope_Av=0.1,**kwargs):
         """
         Note - mlim, mask, mmin_0, and norm_sfr_0 are all LOG quantities.
@@ -83,7 +84,8 @@ class ToyEmissionLineUniverse(object):
         self.norm_sfr_0 = norm_sfr_0
         self.norm_sfr_a = norm_sfr_a
         self.norm_sfr_z = norm_sfr_z
-        self.mbreak_sfr = mbreak_sfr
+        self.mbreak_sfr_0 = mbreak_sfr_0
+        self.mbreak_sfr_z = mbreak_sfr_z
         mt.set_slope_sfr(self,slope_lo_sfr,slope_hi_sfr) # bookkeeping
         self.norm_Av_0 = norm_Av_0
         self.norm_Av_z = norm_Av_z
@@ -115,7 +117,7 @@ class ToyEmissionLineUniverse(object):
                                        mlim=None,mask=None,\
                                        mmin=self.mmin_0,rturn=self.rturn,\
                                        norm_sfr=self.norm_sfr_0,\
-                                       mbreak_sfr=self.mbreak_sfr,\
+                                       mbreak_sfr=self.mbreak_sfr_0,\
                                        slope_lo_sfr=self.slope_lo_sfr,\
                                        slope_hi_sfr=self.slope_hi_sfr,\
                                        norm_Av=self.norm_Av_0,\
@@ -175,7 +177,7 @@ class ToyEmissionLineUniverse(object):
 
     def __get_a_pow(self,z,c_0,c_z):
         a = self.get_a(z)
-        return c_0 + a**-c_z
+        return c_0*(a**-c_z)
 
     def get_mmin(self,z):
         ''' log10(mmin) '''
@@ -192,6 +194,11 @@ class ToyEmissionLineUniverse(object):
         norm_sfr = self.norm_sfr_0 + \
             self.norm_sfr_a * (1. - a) + self.norm_sfr_z * z
         return norm_sfr
+
+    def get_mbreak_sfr(self,z):
+        ''' log10(mbreak_sfr) '''
+        return np.log10(self.__get_a_pow(z,10**self.mbreak_sfr_0,\
+                                         self.mbreak_sfr_z))
 
     def get_mlim_and_mask(self,z):
         conti = self.continuum_model
