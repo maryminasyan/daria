@@ -34,7 +34,7 @@ class DESI(object):
                     elif subsample == 'faint':
                         dndV = np.array([1.5e-2,1e-2,1e-2,8e-3,3e-3,7e-4,\
                                          1e-4,5e-5]) * self.h**3
-                    return lambda z: np.interp(z,z_ok,dndV * self.h**3,\
+                    return lambda z: np.interp(z,z_ok,dndV,\
                                                left=0,right=0)
         else:
             raise AssertionError('unsupported sample')
