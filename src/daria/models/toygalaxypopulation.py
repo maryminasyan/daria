@@ -1,11 +1,11 @@
 import numpy as np
 from types import FunctionType
 from functools import cached_property
-from hmf import MassFunction
 from dust_attenuation.averages import C00
 from ..utils.line_info import line_rwaves, line_lpersfr
 from ..utils.constants import c, m_per_mpc, erg_per_s_per_nW, sqdeg_per_std
 from . import model_tools as mt
+from . import cosmo_tools as ct
 
 class ToyGalaxyPopulation(object):
     def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=11,\
@@ -85,9 +85,7 @@ class ToyGalaxyPopulation(object):
     @property
     def hmf(self):
         if not hasattr(self, '_hmf'):
-            hmf = MassFunction(z=0,Mmin=4,Mmax=16,dlog10m=0.01,\
-                               hmf_model='Tinker10')
-            self._hmf = hmf
+            self._hmf = ct.init_hmf()
         return self._hmf
 
     @cached_property
@@ -146,27 +144,7 @@ class ToyGalaxyPopulation(object):
 
         See `self.m` for the corresponding halo masses [Msun].
         """
-        self.hmf.update(z=z)
-
-        g = self.hmf.growth_factor
-        sigma = self.hmf._sigma_0
-
-        # Note also that this is also HMF's definition of nu
-        delta_sc = 1.686
-        nu = (delta_sc / sigma / g)
-
-        y = np.log10(200.)
-        A = 1. + 0.24 * y * np.exp(-(4. / y)**4)
-        a = 0.44 * y - 0.88
-        B = 0.183
-        b = 1.5
-        C = 0.019 + 0.107 * y + 0.19 * np.exp(-(4. / y)**4)
-        c = 2.4
-
-        bias = 1. - A * (nu**a / (nu**a + delta_sc**a)) \
-             + B * nu**b + C * nu**c
-
-        return bias
+        return ct.get_halo_bias(self.hmf,z)
 
     def get_sfr(self,m):
         """

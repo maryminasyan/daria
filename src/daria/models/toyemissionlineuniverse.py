@@ -1,6 +1,5 @@
 import numpy as np
 from functools import cached_property
-from hmf import MassFunction
 from ..utils.line_info import line_names
 from .toygalaxypopulation import ToyGalaxyPopulation
 from . import model_tools as mt
