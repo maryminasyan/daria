@@ -46,7 +46,7 @@ class Pang26(object):
     def dict_keys(self):
         return ['log10L','phi','phi_err']#_lo','phi_err_hi']
     
-    def get_data(self,dust=False):
+    def get_data(self):
         data = {}
         z_dict_keys = self.dict_keys()
         for i, z in enumerate(self.z):
