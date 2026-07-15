@@ -3,7 +3,7 @@ import numpy as np
 class Sobral13(object):
     ''' Store and retrieve HiZELS Ha luminosity functions. Data from Sobral
     et al. 2013. '''
-    def __init__(self,dust=False):
+    def __init__(self,dust=True):
         self.Av = 1
         self.h = 0.7
         self.planck_h = 0.6766
@@ -66,9 +66,11 @@ class Sobral13(object):
     
     def __get_attr_array(self,attr_name,idx):
         attr = np.array(getattr(self,attr_name)[idx])
-        if (attr_name == 'log10L') and self.dust:
-            transmission = self.get_dust_transmission()
-            attr += np.log10(transmission) # (negative)
+        if (attr_name == 'log10L'):
+            attr += (2*np.log10(self.h/self.planck_h))
+            if self.dust:
+                transmission = self.get_dust_transmission()
+                attr += np.log10(transmission) # (negative)
         elif attr_name == 'phi':
             attr += (3*np.log10(self.planck_h/self.h))
         return attr
@@ -88,4 +90,4 @@ class Sobral13(object):
 
     def label(self):
         dust_str = '_dust' if self.dust else ''
-        return f'sobral13_Ha_{dust_str}'
+        return f'sobral13_Ha{dust_str}'

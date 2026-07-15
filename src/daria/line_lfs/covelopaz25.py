@@ -4,12 +4,14 @@ class CoveloPaz25:
     ''' Ha LFs at z ~ 4-6.5, per Table 1 of
     https://doi.org/10.1051/0004-6361/202452363
     '''
-    def __init__(self):
-        self.dust = True
+    def __init__(self,dust=True):
+        self.dust = dust
+        self.Av = 0.47 # median
         self.h = 0.7
         self.planck_h = 0.6766
         self.line = 'Ha'
         self.z = [4.45,5.3,6.15]
+        # this is with dust
         self.log10L = \
             [ [42,42.25,42.5,42.75,43,43.25],\
               [42,42.25,42.5,42.75,43],\
@@ -42,10 +44,19 @@ class CoveloPaz25:
             attr = np.mean([err_lo,err_hi],axis=0)
         else:
             attr = np.array(getattr(self,attr_name)[idx])
+            if (attr_name == 'log10L'):
+                attr += (2*np.log10(self.h/self.planck_h))
+                if not self.dust:
+                    # log10L recorded including dust, so remove it
+                    transmission = self.get_dust_transmission()
+                    attr -= np.log10(transmission) # (positive)
             if attr_name == 'phi':
                 attr += (3*np.log10(self.planck_h/self.h))
             
         return attr
+
+    def get_dust_transmission(self):
+        return 10**(-self.Av/2.5)
     
     def dict_keys(self):
         return ['log10L','phi','phi_err']#_lo','phi_err_hi']
@@ -61,4 +72,5 @@ class CoveloPaz25:
         return data
 
     def label(self):
-        return f'covelo-paz25_Ha'
+        dust_str = '_dust' if self.dust else ''
+        return f'covelo-paz25_Ha{dust_str}'

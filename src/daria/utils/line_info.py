@@ -18,7 +18,7 @@ line_lpersfr = \
         'OII': 0.71e41,
         # 'Pa': 2.174e40, # (Neufeld+2024 section 3.3) 0.123 * lsfr_kennicutt98
         'Pa': lsfr_kennicutt98 * r_PaHa,
-        'PAH': lsun * 10**6.6, # 3.3 um (Lai+ 2020)
+        'PAH': lsun * 10**6.6 * (0.6766/0.75)**2, # 3.3 um (Lai+ 2020)
         'NII': lsfr_kennicutt98 * 0.25,
         'Pab': lsfr_kennicutt98 / r_HaPab
     }

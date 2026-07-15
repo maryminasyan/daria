@@ -16,8 +16,8 @@ class ToyEmissionLineUniverse(object):
                  continuum_model=None,
                  include_lines='all',mmin_0=8,mmin_z=0,\
                  rturn=1,norm_sfr_0=-4,norm_sfr_a=2.5,norm_sfr_z=0,\
-                 mbreak_sfr_0=12,mbreak_sfr_z=0,slope_lo_sfr=1.5,\
-                 slope_hi_sfr=0.5,\
+                 norm_sfr_logz=0,mbreak_sfr_0=12,mbreak_sfr_z=0,\
+                 slope_lo_sfr=1.5,slope_hi_sfr=0.5,\
                  norm_Av_0=1,norm_Av_z=0.2,slope_Av=0.1,**kwargs):
         """
         Note - mlim, mask, mmin_0, and norm_sfr_0 are all LOG quantities.
@@ -83,6 +83,7 @@ class ToyEmissionLineUniverse(object):
         self.norm_sfr_0 = norm_sfr_0
         self.norm_sfr_a = norm_sfr_a
         self.norm_sfr_z = norm_sfr_z
+        self.norm_sfr_logz = norm_sfr_logz
         self.mbreak_sfr_0 = mbreak_sfr_0
         self.mbreak_sfr_z = mbreak_sfr_z
         mt.set_slope_sfr(self,slope_lo_sfr,slope_hi_sfr) # bookkeeping
@@ -187,18 +188,24 @@ class ToyEmissionLineUniverse(object):
         norm_Av = self.__get_a_pow(z,self.norm_Av_0,self.norm_Av_z)
         return max(norm_Av,0)
 
+    def get_norm_sfr_factor(self,z):
+        a = self.get_a(z)
+        return self.norm_sfr_a * (1 - a) + self.norm_sfr_z * z + \
+            self.norm_sfr_logz * np.log10(1+z)
+    
     def get_norm_sfr(self,z):
         ''' Implicitly log10(norm_sfr) '''
         a = self.get_a(z)
         norm_sfr = self.norm_sfr_0 + \
-            self.norm_sfr_a * (1. - a) + self.norm_sfr_z * z
+            self.norm_sfr_a * (1 - a) + self.norm_sfr_z * z + \
+            self.norm_sfr_logz * np.log10(1 + z)
         return norm_sfr
 
     def get_mbreak_sfr(self,z):
         ''' log10(mbreak_sfr) '''
         return np.log10(self.__get_a_pow(z,10**self.mbreak_sfr_0,\
                                          self.mbreak_sfr_z))
-
+    
     def get_mlim_and_mask(self,z):
         conti = self.continuum_model
         if conti is None:

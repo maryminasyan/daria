@@ -3,7 +3,8 @@ from types import FunctionType
 from functools import cached_property
 from dust_attenuation.averages import C00
 from ..utils.line_info import line_rwaves, line_lpersfr
-from ..utils.constants import c, m_per_mpc, erg_per_s_per_nW, sqdeg_per_std
+from ..utils.constants import c, m_per_mpc, erg_per_s_per_nW, sqdeg_per_std,\
+    convert_sfr_to_planck
 from . import model_tools as mt
 from . import cosmo_tools as ct
 
@@ -195,16 +196,20 @@ class ToyGalaxyPopulation(object):
         is_H_line = line.lower().startswith('h') or line in ['Pa','Pab']
         metal_line_model = self.metal_line_model
 
+        l_per_sfr = line_lpersfr[line]
+        if line.lower() != 'pah':
+            l_per_sfr *= convert_sfr_to_planck
+            
         if not metal_line_model and not is_H_line:
             return np.zeros_like(sfr)
         elif (metal_line_model == 'l_sfr') or is_H_line:
-            return sfr * line_lpersfr[line] * Tdust
+            return sfr * l_per_sfr * Tdust
         else:
             # If we're here, we're doing some kind of BPT+ modeling.
             # First, retrieve *intrinsic* H-a and H-b line emission as
             # we'll scale from there.
-            LHa = sfr * line_lpersfr['Ha']
-            LHb = sfr * line_lpersfr['Hb']
+            LHa = sfr * line_lpersfr['Ha'] * convert_sfr_to_planck
+            LHb = sfr * line_lpersfr['Hb'] * convert_sfr_to_planck
 
             N2 = self.N2_norm + self.N2_slope * np.log10(m / 1e10)
             if line == 'NII':
@@ -227,7 +232,7 @@ class ToyGalaxyPopulation(object):
                 else:
                     raise NotImplemented('shouldnt do total OIII!')
             else:
-                return sfr * line_lpersfr[line] * Tdust
+                return sfr * l_per_sfr * Tdust
 
     def get_lf_line(self,z,line='Ha'):
         """

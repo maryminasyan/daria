@@ -43,7 +43,9 @@ class Khostovan15(object):
                   
     def __get_attr_array(self,attr_name,idx,line_idx):
         attr = np.array(getattr(self,attr_name)[line_idx][idx])
-        if attr_name == 'phi':
+        if attr_name == 'log10L':
+            attr += (2*np.log10(self.h/self.planck_h))
+        elif attr_name == 'phi':
             attr += (3*np.log10(self.planck_h/self.h))
         return attr
     

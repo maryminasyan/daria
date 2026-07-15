@@ -13,6 +13,8 @@ r_HaPab = 17.6
 r_PaHb = 0.33
 r_PaHa = r_PaHb / r_ab
 
+convert_sfr_to_planck = (0.6766/0.7)**2
+convert_L_to_planck = 1/convert_sfr_to_planck
 # Ha L-SFR calibrations
 lsfr_kennicutt98 = 1.27e41 # Kennicutt 1998
 lsfr_murphy11 = 1.862e41 # Murphy et al 2011 / Kennicutt and Evans 2012

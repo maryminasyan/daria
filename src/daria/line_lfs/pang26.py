@@ -35,9 +35,11 @@ class Pang26(object):
             attr = np.mean([err_lo,err_hi],axis=0)
         else:
             attr = np.array(getattr(self,attr_name)[idx])
-            if (attr_name == 'log10L') and self.dust:
-                transmission = self.get_dust_transmission()
-                attr += np.log10(transmission) # (negative)
+            if (attr_name == 'log10L'):
+                attr += (2*np.log10(self.h/self.planck_h))
+                if self.dust:
+                    transmission = self.get_dust_transmission()
+                    attr += np.log10(transmission) # (negative)
             elif attr_name == 'phi':
                 attr += (3*np.log10(self.planck_h/self.h))
             
