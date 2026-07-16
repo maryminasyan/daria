@@ -15,7 +15,7 @@ class Comparat16(object):
         phi_err = []
         for i,line in enumerate(self.lines):
             file_name = f'{self.line_heads[i]}-data-summary-Planck15.txt'
-            fn = resources.files('daria') / f'line_lfs/data/{file_name}'
+            fn = resources.files('daria') / f'line_lfs/data/comparat16/{file_name}'
             data = pd.read_csv(fn,sep=' ')
             # avoid some data sets I would rather not use
             data = data[data['Ngalaxy'] > 0]
