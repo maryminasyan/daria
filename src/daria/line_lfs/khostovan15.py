@@ -2,7 +2,9 @@ import numpy as np
 
 class Khostovan15(object):
     ''' Store and retrieve HiZELS Hb+[OIII] and [OII] luminosity functions.
-    Data from Khostovan et al. 2015 '''
+    Data from Khostovan et al. 2015. Note that if you are using Comparat+16,
+    their compiled LFs include the [OII] LF defined here, so no need to
+    double count it. '''
     def __init__(self):
         self.dust = True
         self.h = 0.7
