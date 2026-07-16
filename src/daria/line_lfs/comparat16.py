@@ -5,7 +5,7 @@ from importlib import resources
 class Comparat16(object):
     def __init__(self):
         self.dust = True
-        self.h = 0.6766
+        self.h = 0.677
         self.planck_h = 0.6766
         self.lines = ['Hb','OIII_5007','OII']
         self.line_heads = ['H1_4862','O3_5007','O2_3728']
