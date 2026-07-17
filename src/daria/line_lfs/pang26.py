@@ -3,7 +3,7 @@ import numpy as np
 class Pang26(object):
     ''' Store and retrieve GLASS-JWST Ha+[NII] LFs. Data is from Pang et al.
     2026. '''
-    def __init__(self,dust=False):
+    def __init__(self,dust=True):
         self.Av = 1
         self.h = 0.7
         self.planck_h = 0.6766
