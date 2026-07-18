@@ -37,6 +37,8 @@ class ToyGalaxyPopulation(object):
 
         # Metal line parameters depend on the chosen model
         mt.set_attrs(self,mt.get_default_dict(self.metal_line_model),**kwargs)
+        if (kwargs == {}) and (self.metal_line_model != 'l_sfr'):
+            kwargs.update(mt.get_default_dict(self.metal_line_model))
 
         ''' Create a dictionary with the initial parameter inputs. This
         is useful if we update any parameters later on (to avoid the cost of

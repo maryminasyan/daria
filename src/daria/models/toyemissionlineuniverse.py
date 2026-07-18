@@ -26,7 +26,7 @@ class ToyEmissionLineUniverse(object):
             How to model metal lines (mainly [NII] and [OIII], but [OII] is
             affected by association). Depending on the model you choose, you
             will need to provide different kwargs. Options are:
-            - 'l_sfr' or True: Apply line luminosity-SFR scaling. PRovide no
+            - 'l_sfr' or True: Apply line luminosity-SFR scaling. Provide no
             additional kwargs.
             - 'indep_pow': [NII]/Ha and [OIII]/Hb ratios have independent
             power law halo mass prescriptions.
@@ -93,6 +93,8 @@ class ToyEmissionLineUniverse(object):
 
         # Metal line parameters depend on the chosen model
         mt.set_attrs(self,mt.get_default_dict(self.metal_line_model),**kwargs)
+        if (kwargs == {}) and (self.metal_line_model != 'l_sfr'):
+            kwargs.update(mt.get_default_dict(self.metal_line_model))
 
         ''' Create a dictionary with the initial parameter inputs. This
         is useful if we update any parameters later on (to avoid the cost of
@@ -490,9 +492,7 @@ class ToyEmissionLineUniverse(object):
             Spectral channel definitions, with shape (n_channels,2)
         waves2 : np.ndarray
             Spectral channel definitions of 2nd channel, in the case of
-            internal crosses. If defined, should have the same dimensions as
-            `waves`. 
-        
+            internal crosses. If defined, should have the same dim as `waves`.
 
         Returns
         -------
