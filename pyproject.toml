@@ -19,7 +19,8 @@ dependencies = [
   "matplotlib",
   "ipykernel",
   "hmf",
-  "dust_attenuation @ git+https://github.com/karllark/dust_attenuation.git"
+  "dust_attenuation @ git+https://github.com/karllark/dust_attenuation.git",
+  "emcee >= 3.1.6"
 ]
 
 [project.urls]
