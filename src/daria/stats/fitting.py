@@ -132,6 +132,9 @@ def lnpost(x, *args):
             for z_l in zs_l:
                 lf_l_z = lf_l[z_l]
                 logL, phi = model.get_lf_line(z=z_l,line=lines_use)
+                ''' Avoid default np interp boundary conditions and penalize
+                instances where the proposed model has no objects with
+                luminosities at the observed data points. '''
                 ymod_lf_l_z = np.interp(lf_l_z['log10L'],logL,np.log10(phi),
                                         left=100,right=-100)
                 _lnL = -0.5 * (lf_l_z['phi'] - ymod_lf_l_z)**2 / \
