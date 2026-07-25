@@ -189,11 +189,6 @@ class ToyEmissionLineUniverse(object):
         ''' (not a log) '''
         norm_Av = self.__get_a_pow(z,self.norm_Av_0,self.norm_Av_z)
         return max(norm_Av,0)
-
-    def get_norm_sfr_factor(self,z):
-        a = self.get_a(z)
-        return self.norm_sfr_a * (1 - a) + self.norm_sfr_z * z + \
-            self.norm_sfr_logz * np.log10(1+z)
     
     def get_norm_sfr(self,z):
         ''' Implicitly log10(norm_sfr) '''
@@ -262,14 +257,15 @@ class ToyEmissionLineUniverse(object):
         self.update_pop_z(z)
         return self.pop.get_sfr(self.pop.m)
 
-    def get_sfrd(self,z):
+    def get_sfrd(self,z,include_mask=True,sfr_lim=None):
         if type(z) != np.ndarray:
             z = np.array([z])
 
         sfrd = np.zeros_like(z)
         for i, _z_ in enumerate(z):
             self.update_pop_z(_z_)
-            sfrd[i] = self.pop.get_sfrd(_z_)
+            sfrd[i] = self.pop.get_sfrd(_z_,include_mask=include_mask,\
+                                        sfr_lim=sfr_lim)
 
         return sfrd
 

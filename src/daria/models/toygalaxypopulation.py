@@ -3,8 +3,7 @@ from types import FunctionType
 from functools import cached_property
 from dust_attenuation.averages import C00
 from ..utils.line_info import line_rwaves, line_lpersfr
-from ..utils.constants import c, m_per_mpc, erg_per_s_per_nW, sqdeg_per_std,\
-    convert_sfr_to_planck
+from ..utils.constants import c, m_per_mpc, erg_per_s_per_nW, sqdeg_per_std
 from . import model_tools as mt
 from . import cosmo_tools as ct
 
@@ -176,12 +175,18 @@ class ToyGalaxyPopulation(object):
             mmin = self.exponentiate(self.mmin)
             return 1 - np.exp(-(m / mmin)**self.rturn)
 
-    def get_sfrd(self,z,include_mask=True):
+    def get_sfrd(self,z,include_mask=True,sfr_lim=None):
         """
         Returns cosmic star-formation rate density (Msun/yr/cMpc^3) at `z`.
         """
         self.hmf.update(z=z)
-        m, ok = self.get_integration_bounds(include_mask=include_mask)
+        if sfr_lim is None:
+            m, ok = self.get_integration_bounds(include_mask=include_mask)
+        else:
+            sfr_init = self.get_sfr(self.m)
+            ok = np.logical_and(sfr_init > sfr_lim[0],
+                                sfr_init < sfr_lim[1])
+            m = self.m[ok]
         sfr = self.get_sfr(m)
         focc = self.get_focc(m)
         dndlnm = self.hmf.dndlnm[ok] * self.h**3
@@ -199,8 +204,6 @@ class ToyGalaxyPopulation(object):
         metal_line_model = self.metal_line_model
 
         l_per_sfr = line_lpersfr[line]
-        if line.lower() != 'pah':
-            l_per_sfr *= convert_sfr_to_planck
             
         if not metal_line_model and not is_H_line:
             return np.zeros_like(sfr)
@@ -210,8 +213,8 @@ class ToyGalaxyPopulation(object):
             # If we're here, we're doing some kind of BPT+ modeling.
             # First, retrieve *intrinsic* H-a and H-b line emission as
             # we'll scale from there.
-            LHa = sfr * line_lpersfr['Ha'] * convert_sfr_to_planck
-            LHb = sfr * line_lpersfr['Hb'] * convert_sfr_to_planck
+            LHa = sfr * line_lpersfr['Ha']
+            LHb = sfr * line_lpersfr['Hb']
 
             N2 = self.N2_norm + self.N2_slope * np.log10(m / 1e10)
             if line == 'NII':
@@ -241,7 +244,7 @@ class ToyGalaxyPopulation(object):
         Compute the line luminosity function at redshift `z`.
         """
         self.hmf.update(z=z)
-        m, ok = self.get_integration_bounds(include_mask=False)#self.m
+        m, ok = self.get_integration_bounds(include_mask=False)
 
         if isinstance(line,str):
             log10lum = np.log10(self.get_lum_line(m,line=line))
