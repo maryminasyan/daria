@@ -1,4 +1,5 @@
 import numpy as np
+from .lf_tools import correct_little_h
 
 class Khostovan15(object):
     ''' Store and retrieve HiZELS Hb+[OIII] and [OII] luminosity functions.
@@ -45,10 +46,7 @@ class Khostovan15(object):
                   
     def __get_attr_array(self,attr_name,idx,line_idx):
         attr = np.array(getattr(self,attr_name)[line_idx][idx])
-        if attr_name == 'log10L':
-            attr += (2*np.log10(self.h/self.planck_h))
-        elif attr_name == 'phi':
-            attr += (3*np.log10(self.planck_h/self.h))
+        attr = correct_little_h(attr,attr_name,h_in=self.h)
         return attr
     
     def dict_keys(self):

@@ -1,4 +1,5 @@
 import numpy as np
+from .lf_tools import correct_little_h
 
 class Sobral13(object):
     ''' Store and retrieve HiZELS Ha luminosity functions. Data from Sobral
@@ -66,13 +67,10 @@ class Sobral13(object):
     
     def __get_attr_array(self,attr_name,idx):
         attr = np.array(getattr(self,attr_name)[idx])
-        if (attr_name == 'log10L'):
-            attr += (2*np.log10(self.h/self.planck_h))
-            if self.dust:
-                transmission = self.get_dust_transmission()
-                attr += np.log10(transmission) # (negative)
-        elif attr_name == 'phi':
-            attr += (3*np.log10(self.planck_h/self.h))
+        attr = correct_little_h(attr,attr_name,h_in=self.h)
+        if (attr_name == 'log10L') and self.dust:
+            transmission = self.get_dust_transmission()
+            attr += np.log10(transmission) # (negative)
         return attr
     
     def dict_keys(self):

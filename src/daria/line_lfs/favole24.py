@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 from importlib import resources
-            
+from .lf_tools import correct_little_h
+
 class Favole24(object):
     def __init__(self,population='full',dust=True):
         '''
@@ -47,10 +48,7 @@ class Favole24(object):
                   
     def __get_attr_array(self,attr_name,idx,line_idx):
         attr = np.array(getattr(self,attr_name)[line_idx][idx])
-        if attr_name == 'log10L':
-            attr += (2*np.log10(self.h/self.planck_h))
-        elif attr_name == 'phi':
-            attr += (3*np.log10(self.planck_h/self.h))
+        attr = correct_little_h(attr,attr_name,h_in=self.h)
         return attr
     
     def dict_keys(self):

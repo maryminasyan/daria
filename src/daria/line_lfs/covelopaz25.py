@@ -1,4 +1,5 @@
 import numpy as np
+from .lf_tools import correct_little_h
 
 class CoveloPaz25:
     ''' Ha LFs at z ~ 4-6.5, per Table 1 of
@@ -44,15 +45,11 @@ class CoveloPaz25:
             attr = np.mean([err_lo,err_hi],axis=0)
         else:
             attr = np.array(getattr(self,attr_name)[idx])
-            if (attr_name == 'log10L'):
-                attr += (2*np.log10(self.h/self.planck_h))
-                if not self.dust:
-                    # log10L recorded including dust, so remove it
-                    transmission = self.get_dust_transmission()
-                    attr -= np.log10(transmission) # (positive)
-            if attr_name == 'phi':
-                attr += (3*np.log10(self.planck_h/self.h))
-            
+            if (attr_name == 'log10L') and not self.dust:
+                # log10L recorded including dust, so remove it
+                transmission = self.get_dust_transmission()
+                attr -= np.log10(transmission) # (positive)
+        attr = correct_little_h(attr,attr_name,h_in=self.h)
         return attr
 
     def get_dust_transmission(self):

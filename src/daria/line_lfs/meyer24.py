@@ -1,4 +1,5 @@
 import numpy as np
+from .lf_tools import correct_little_h
 
 class Meyer24(object):
     ''' Store and retrieve [OIII] LFs from Meyer et al 2024 '''
@@ -54,10 +55,7 @@ class Meyer24(object):
             attr = np.mean([err_lo,err_hi],axis=0)
         else:
             attr = np.array(getattr(self,attr_name)[idx])
-            if (attr_name == 'log10L'):
-                attr += (2*np.log10(self.h/self.planck_h))
-            elif attr_name == 'phi':
-                attr += (3*np.log10(self.planck_h/self.h))
+        attr = correct_little_h(attr,attr_name,h_in=self.h)
         return attr
     
     def dict_keys(self):
