@@ -1,7 +1,5 @@
 import numpy as np
 
-##
-# On to function definitions
 def kwargs_to_args(kw, params):
     """
     Take a set of keywords arguments used to run a model and
@@ -60,12 +58,8 @@ def lnpost(x, *args):
     
     model.update(**kwargs)
 
-    # So far, our only choice is whether Ha, Hb, or both, are included in the
-    # fit, hence the if statements below.
-
     lnL = 0.0
 
-    ##
     # Fitting cross-correlations
     if 'xcorr' in data:
         assert model.target_prop is not None 
@@ -143,13 +137,10 @@ def lnpost(x, *args):
 
                 if np.any(np.isnan(_lnL)):
                     return -np.inf
-    
-    ##
+
     # Commenting this check out as it shouldn't be necessary.
     # If we get NaNs, should accept error and troubleshoot from there.
     #if np.any(np.isnan(lnL)) or np.any(np.isnan(lnP)):
     #    return -np.inf
 
-    ##
-    # Done!
     return lnL + lnP
