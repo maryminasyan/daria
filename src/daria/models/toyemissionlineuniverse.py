@@ -13,12 +13,12 @@ class ToyEmissionLineUniverse(object):
     in redshift evolution.
     """
     def __init__(self,target_prop=None,metal_line_model='l_sfr',\
-                 continuum_model=None,
-                 include_lines='all',mmin_0=8,mmin_z=0,\
+                 continuum_model=None,include_lines='all',mmin_0=8,mmin_z=0,\
                  rturn=1,norm_sfr_0=-4,norm_sfr_a=2.5,norm_sfr_z=0,\
                  norm_sfr_logz=0,mbreak_sfr_0=12,mbreak_sfr_z=0,\
                  slope_lo_sfr=1.5,slope_hi_sfr=0.5,\
-                 norm_Av_0=1,norm_Av_z=0.2,slope_Av=0.1,**kwargs):
+                 norm_Av_0=1,norm_Av_z=0.2,slope_Av=0.1,\
+                 sfr_ext_a=0,sfr_ext_b=0,**kwargs):
         """
         Note - mlim, mask, mmin_0, and norm_sfr_0 are all LOG quantities.
         
@@ -90,6 +90,8 @@ class ToyEmissionLineUniverse(object):
         self.norm_Av_0 = norm_Av_0
         self.norm_Av_z = norm_Av_z
         self.slope_Av = slope_Av
+        self.sfr_ext_a = sfr_ext_a
+        self.sfr_ext_b = sfr_ext_b
 
         # Metal line parameters depend on the chosen model
         mt.set_attrs(self,mt.get_default_dict(self.metal_line_model),**kwargs)
@@ -123,7 +125,9 @@ class ToyEmissionLineUniverse(object):
                                        slope_lo_sfr=self.slope_lo_sfr,\
                                        slope_hi_sfr=self.slope_hi_sfr,\
                                        norm_Av=self.norm_Av_0,\
-                                       slope_Av=self.slope_Av,**kwargs)
+                                       slope_Av=self.slope_Av,\
+                                       sfr_ext_a=self.sfr_ext_a,\
+                                       sfr_ext_b=self.sfr_ext_b,**kwargs)
         self.update_pop_z(0) # hacky way to assign correct mlim and mask...
 
     def update(self,**kwargs):

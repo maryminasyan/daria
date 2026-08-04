@@ -10,8 +10,8 @@ from . import cosmo_tools as ct
 class ToyGalaxyPopulation(object):
     def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=11,\
                  mask=12,mmin=8,rturn=1,norm_sfr=-4,mbreak_sfr=12,\
-                 slope_lo_sfr=1.5,slope_hi_sfr=0.5,norm_Av=1.,slope_Av=0.1,\
-                 **kwargs):
+                 slope_lo_sfr=1.5,slope_hi_sfr=0.5,norm_Av=1,slope_Av=0.1,\
+                 sfr_ext_a=0,sfr_ext_b=0,sfr_scatter=False,**kwargs):
         """
         Note - mlim, mask, mmin, and norm_sfr are all LOG quantities.
         
@@ -33,6 +33,8 @@ class ToyGalaxyPopulation(object):
         mt.set_slope_sfr(self,slope_lo_sfr,slope_hi_sfr) # bookkeeping
         self.norm_Av = norm_Av
         self.slope_Av = slope_Av
+        self.sfr_ext_a = sfr_ext_a
+        self.sfr_ext_b = sfr_ext_b
 
         # Metal line parameters depend on the chosen model
         mt.set_attrs(self,mt.get_default_dict(self.metal_line_model),**kwargs)
@@ -164,9 +166,12 @@ class ToyGalaxyPopulation(object):
         normcorr = (1e10 / mbreak_sfr)**-self.slope_lo_sfr + \
             (1e10 / mbreak_sfr)**-self.slope_hi_sfr
 
-        return normcorr * norm_sfr / \
+        sfr = normcorr * norm_sfr / \
             ((m / mbreak_sfr)**-self.slope_lo_sfr + \
              (m / mbreak_sfr)**-self.slope_hi_sfr)
+
+        sfr *= (1+(m/1e10)**self.sfr_ext_a)**self.sfr_ext_b
+        return sfr
 
     def get_focc(self,m):
         if self.rturn == np.inf:
