@@ -13,6 +13,6 @@ def replace_phi(model,data_dict,lines):
         log10L, phi = model.get_lf_line(z,lines)
         phi_true = np.interp(data_dict[z]['log10L'],log10L,np.log10(phi))
         err = data_dict[z]['phi_err']
-        phi_obs = np.random.norma(loc=phi_true,scale=err)
+        phi_obs = np.random.normal(loc=phi_true,scale=err)
         data_dict[z]['phi'] = phi_obs
     return data_dict
