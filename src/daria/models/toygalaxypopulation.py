@@ -848,3 +848,29 @@ class ToyGalaxyPopulation(object):
             _b = _b_target
 
         return _n, _b
+
+    def get_shmr(self,m):
+        ''' Stellar to halo mass ratio; used for diagnostics and not actually
+        invoked in model. '''
+        norm = 8.8775e-4
+        mpeak = 1.8988e12
+        mnorm = 1e10
+        slope_lo = 9.3383e-1
+        slope_hi = -8.5914e-1
+
+        norm *= (((mnorm/mpeak)**-slope_lo) + ((mnorm/mpeak)**-slope_hi))
+
+        shmr = norm * \
+            (((m/mpeak)**-slope_lo) + ((m/mpeak)**-slope_hi))**-1
+
+        return shmr
+
+    def get_stellar_mass(self,m):
+        shmr = self.get_shmr(m)
+        return m * shmr
+
+    def get_ssfr(self,m):
+        ''' Specific star formation rate (sSFR) = SFR / M_stellar '''
+        sfr = self.get_sfr(m)
+        mstel = self.get_stellar_mass(m)
+        return sfr/mstel

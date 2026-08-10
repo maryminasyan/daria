@@ -503,4 +503,3 @@ class ToyEmissionLineUniverse(object):
         ps_tot = self.get_ps_tot(scales,waves,sum_lines=True)
         ps_tot = ps_tot.diagonal()
         return ps_tot
-
