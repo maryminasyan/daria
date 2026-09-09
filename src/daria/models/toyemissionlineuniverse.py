@@ -14,10 +14,10 @@ class ToyEmissionLineUniverse(object):
     """
     def __init__(self,target_prop=None,metal_line_model='l_sfr',\
                  continuum_model=None,include_lines='all',mmin_0=8,mmin_z=0,\
-                 rturn=1,norm_sfr_0=-4,norm_sfr_a=2.5,norm_sfr_z=0,\
-                 norm_sfr_logz=0,mbreak_sfr_0=12,mbreak_sfr_z=0,\
-                 slope_lo_sfr=1.5,slope_hi_sfr=0.5,\
-                 norm_Av_0=1,norm_Av_z=0.2,slope_Av=0.1,\
+                 rturn=np.inf,norm_sfr_0=-3.65,norm_sfr_a=1.55,norm_sfr_z=0,\
+                 norm_sfr_logz=0,mbreak_sfr_0=10.8,mbreak_sfr_z=0.635,\
+                 slope_lo_sfr=0.85,slope_hi_sfr=3.05,\
+                 norm_Av_0=1.5,norm_Av_z=-0.3,slope_Av=0,\
                  sfr_ext_a=0,sfr_ext_b=0,**kwargs):
         """
         Note - mlim, mask, mmin_0, and norm_sfr_0 are all LOG quantities.

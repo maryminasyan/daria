@@ -100,12 +100,12 @@ def get_default_dict(metal_line_model):
     """
     default_dict = {}
 
-    if metal_line_model == 'indep_pow':
-        default_dict['N2_norm'] = -1.5
-        default_dict['N2_slope'] = 0.5
-        default_dict['O3_norm'] = 0.5 # O3 defaults are somewhat arbitrary
-        default_dict['O3_slope'] = -0.5
-    elif metal_line_model == 'o3_dep_n2':
+    if metal_line_model == 'indep_pow': # roughly tuned to LFs?
+        default_dict['N2_norm'] = -0.4
+        default_dict['N2_slope'] = 0
+        default_dict['O3_norm'] = -0.175
+        default_dict['O3_slope'] = 0.125
+    elif metal_line_model == 'o3_dep_n2': # tune?
         default_dict['N2_norm'] = -1.5
         default_dict['N2_slope'] = 0.5
         default_dict['O3_const'] = 1.1
