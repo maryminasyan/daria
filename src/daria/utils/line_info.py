@@ -1,8 +1,9 @@
-from .constants import lsun, r_ab, r_PaHa, r_HaPab, lsfr_kennicutt98
+from .constants import lsun, r_ab, r_PaHa, r_HaPab, lsfr_kennicutt98, \
+    r_PagHb, r_BraHb, r_BrbHb, r_BrgHb
 
 # Avoid double-counting OIII
 line_names = ('Lya','Ha','Hb','Hg','Hd','He','OIII_5007','OIII_4959','OII',\
-              'Pa','PAH','NII','Pab')
+              'Pa','PAH','NII','Pab','Pag','Bra','Brb','Brg')
 
 line_lpersfr = \
     {
@@ -20,7 +21,11 @@ line_lpersfr = \
         'Pa': lsfr_kennicutt98 * r_PaHa,
         'PAH': lsun * 10**6.6 / 0.67, # Kroupa to Salpeter # 3.3 um (Lai+ 2020)
         'NII': lsfr_kennicutt98 * 0.25,
-        'Pab': lsfr_kennicutt98 / r_HaPab
+        'Pab': lsfr_kennicutt98 / r_HaPab,
+        'Pag': r_PagHb * lsfr_kennicutt98 / r_ab,
+        'Bra': r_BraHb * lsfr_kennicutt98 / r_ab,
+        'Brb': r_BrbHb * lsfr_kennicutt98 / r_ab,
+        'Brg': r_BrgHb * lsfr_kennicutt98 / r_ab
     }
 
 line_rwaves = \
@@ -37,7 +42,11 @@ line_rwaves = \
         'Pa': 1.87e4,
         'PAH': 3.3e4,
         'NII': 6584,
-        'Pab': 1.28e4
+        'Pab': 1.282e4,
+        'Pag': 1.094e4,
+        'Bra': 4.051e4,
+        'Brb': 2.625e4,
+        'Brg': 2.166e4
     }        
         
         

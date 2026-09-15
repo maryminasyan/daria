@@ -12,6 +12,11 @@ r_ab = 2.86 # Balmer decrement in absence of dust
 r_HaPab = 17.6
 r_PaHb = 0.33
 r_PaHa = r_PaHb / r_ab
+# Osterbrock + Ferland table 4.4 T 10kK ne 1e2
+r_PagHb = 0.0904
+r_BraHb = 0.0802
+r_BrbHb = 0.0455
+r_BrgHb = 0.0278
 
 convert_L_to_planck = (0.7/0.6766)**2
 # Ha L-SFR calibrations
