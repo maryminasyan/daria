@@ -393,7 +393,7 @@ class ToyEmissionLineUniverse(object):
         for j, zbin in enumerate(zbins):
 
             if np.all(xcorr_mask[:,j] == 0):
-                continue
+                continue # entire redshift bin is masked
 
             zbin_c = zbins_c[j]
             self.update_pop_z(zbin_c)
@@ -402,10 +402,20 @@ class ToyEmissionLineUniverse(object):
             n, b = self.pop.get_target_prop(zbin,None,None)
 
             for i, chan in enumerate(channels):
+                
+                if np.all(xcorr_mask[i,j] == 0):
+                    continue # no lines of interest live in this channel
+                
                 for k, line in enumerate(self.include_lines):
+
+                    _, dz_g, dz_l, _ = self.pop.get_z_dz(chan,line,zbin=zbin)
+                    if (dz_g == 0) or (dz_l == 0):
+                        continue # kth line of interest not in this channel
+                    
                     ps = self.pop.get_xcorr_chan_line(chan,zbin=zbin,\
                                                       n_target=n,b_target=b,\
                                                       line=line)
+
                     xcorr_mtx[k,i,j,:] += np.interp(ell,_ell_,ps)
 
         if sum_lines: # sum over all lines
