@@ -205,7 +205,8 @@ class ToyGalaxyPopulation(object):
         sfr = self.get_sfr(m)
         Tdust = self.get_dust_transmission(m,line=line)
 
-        is_H_line = line.lower().startswith('h') or line in ['Pa','Pab']
+        is_H_line = line.lower().startswith('h') or \
+            line in ['Pa','Pab','Pag','Bra','Brb','Brg']
         metal_line_model = self.metal_line_model
 
         l_per_sfr = line_lpersfr[line]
