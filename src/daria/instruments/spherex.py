@@ -65,4 +65,41 @@ class SPHEREx(object):
         sigma_noise = nuInu.to(u.nW/u.m**2/u.sr)
         Cl_noise = sigma_noise**2 * self.beam # nW2 m-4 sr-1
         return Cl_noise.value
+
+class SPHERExCat(object):
+    def __init__(self,zerr_type=2):
+        self.zerr_type = zerr_type
+        self.fsky = 0.7
+        self.h = 0.6766
+
+        self.nz_path = self.__get_path('nz')
+        self.bias_path = self.__get_path('bias')
+
+        self.dndV = self.__get_quantity('nz')
+        self.bias = self.__get_quantity('bias')
+
+    def __get_path(self,quantity):
+        path = resources.files('daria') / \
+            f'instruments/data/SPHEREx/spherex_public_{quantity}.csv'
+        return path
         
+    def __get_quantity(self,quantity):
+        path = getattr(self,f'{quantity}_path')
+        table = np.loadtxt(path,delimiter=',',skiprows=1)
+        z_ok = table[:,0]
+        z_ok[0] = table[0,1]
+        z_ok[-1] = table[-1,2]
+        quantity_ok = table[:,self.zerr_type+2]
+        if quantity == 'nz':
+            quantity_ok *= self.h**3 # provided in (h/Mpc)^3
+        return lambda z: np.interp(z,z_ok,quantity_ok,left=0,right=0)
+
+    def get_target_prop(self):
+        target_prop = {}
+        keys = ['dndV','bias','fsky']
+        for key in keys:
+            target_prop[key] = getattr(self,key)
+        return target_prop
+
+    def label(self):
+        return f'spherexcat_zerr{self.zerr_type}'
