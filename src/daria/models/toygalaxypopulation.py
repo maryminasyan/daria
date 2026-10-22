@@ -195,7 +195,7 @@ class ToyGalaxyPopulation(object):
         sfr = self.get_sfr(m)
         focc = self.get_focc(m)
         dndlnm = self.hmf.dndlnm[ok] * self.h**3
-        sfrd = np.trapz(dndlnm * sfr * focc, x=np.log(m))
+        sfrd = np.trapezoid(dndlnm * sfr * focc, x=np.log(m))
         return sfrd
 
     def get_lum_line(self,m,line='Ha'):
@@ -388,8 +388,8 @@ class ToyGalaxyPopulation(object):
         focc = self.get_focc(m_use)
         dndlnm = self.hmf.dndlnm[ok] * self.h**3
 
-        top = np.trapz(dndlnm * focc * lum * bh, x=np.log(m_use))
-        bot = np.trapz(dndlnm * focc * lum, x=np.log(m_use))
+        top = np.trapezoid(dndlnm * focc * lum * bh, x=np.log(m_use))
+        bot = np.trapezoid(dndlnm * focc * lum, x=np.log(m_use))
 
         return top / bot
 
@@ -412,7 +412,7 @@ class ToyGalaxyPopulation(object):
         focc = self.get_focc(m_use)
         dndlnm = self.hmf.dndlnm[ok] * self.h**3
 
-        integ = np.trapz(dndlnm * focc * lum, x=np.log(m_use))  # erg/s/Mpc^3
+        integ = np.trapezoid(dndlnm*focc*lum,x=np.log(m_use)) # erg/s/Mpc^3
 
         return norm * integ / m_per_mpc**2 / erg_per_s_per_nW
 
