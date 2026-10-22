@@ -12,7 +12,9 @@ DARIA has a few non-standard dependencies:
 
 Once you have those installed and are in this top-level directory of the repo, run:
 
-``` pip install .```
+```
+pip install .
+```
 
 ## File configuration
 
@@ -20,11 +22,15 @@ Once you have those installed and are in this top-level directory of the repo, r
 
 1. In whichever shell configuration file you use (e.g., `.bashrc`), add the line below (customized to your preferred (existing) directory) and source the file to apply the changes.
 
-``` export DARIA="/absolute/path/to/where/you/want/to/store/data/products" ```
+```
+export DARIA="/absolute/path/to/where/you/want/to/store/data/products"
+```
 
 2. Copy the config template from `daria` to the directory you defined above. From the current directory, you can run:
 
-``` cp src/daria/bookkeeping/config_template.yaml $DARIA/config.yaml ```
+```
+cp src/daria/bookkeeping/config_template.yaml $DARIA/config.yaml
+```
 
 3. Assuming you have successfully installed `daria`, run:
 
