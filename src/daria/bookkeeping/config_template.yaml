@@ -1,0 +1,8 @@
+# Start a fresh serial number after important code changes.
+# Each serial number will have a unique subdir in each of the following dirs.
+serial: 0
+# Directories for important data products and plots
+conti_directory: $DARIA/continuum_autos
+noise_directory: $DARIA/noise
+inference_directory: $DARIA/inference
+fig_directory: $DARIA/figures
