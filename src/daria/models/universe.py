@@ -1,15 +1,15 @@
 import numpy as np
 from functools import cached_property
 from ..utils.line_info import line_names
-from .toygalaxypopulation import ToyGalaxyPopulation
+from .population import Population
 from . import model_tools as mt
 
-class ToyEmissionLineUniverse(object):
+class Universe(object):
     """
     This class streamlines modeling of galaxy/EBL cross-correlations over the
     full wavelength and redshift range. It works in terms of parameters that
     describe the redshift evolution of the SFR(Mh) relationship and dust
-    correction, whereas the ToyGalaxyPopulation does not explicitly deal
+    correction, whereas the Population does not explicitly deal
     in redshift evolution.
     """
     def __init__(self,target_prop=None,metal_line_model='l_sfr',\
@@ -116,18 +116,16 @@ class ToyEmissionLineUniverse(object):
         self.init_kwargs = kwargs # Also need kwargs saved separately
             
         # Initialize `pop` with these args so it has corresponding `init_args`
-        self.pop = ToyGalaxyPopulation(target_prop=self.target_prop,\
-                                       metal_line_model=self.metal_line_model,\
-                                       mlim=None,mask=None,\
-                                       mmin=self.mmin_0,rturn=self.rturn,\
-                                       norm_sfr=self.norm_sfr_0,\
-                                       mbreak_sfr=self.mbreak_sfr_0,\
-                                       slope_lo_sfr=self.slope_lo_sfr,\
-                                       slope_hi_sfr=self.slope_hi_sfr,\
-                                       norm_Av=self.norm_Av_0,\
-                                       slope_Av=self.slope_Av,\
-                                       sfr_ext_a=self.sfr_ext_a,\
-                                       sfr_ext_b=self.sfr_ext_b,**kwargs)
+        self.pop = Population(target_prop=self.target_prop,\
+                              metal_line_model=self.metal_line_model,\
+                              mlim=None,mask=None,mmin=self.mmin_0,\
+                              rturn=self.rturn,norm_sfr=self.norm_sfr_0,\
+                              mbreak_sfr=self.mbreak_sfr_0,\
+                              slope_lo_sfr=self.slope_lo_sfr,\
+                              slope_hi_sfr=self.slope_hi_sfr,\
+                              norm_Av=self.norm_Av_0,slope_Av=self.slope_Av,\
+                              sfr_ext_a=self.sfr_ext_a,\
+                              sfr_ext_b=self.sfr_ext_b,**kwargs)
         self.update_pop_z(0) # hacky way to assign correct mlim and mask...
 
     def update(self,**kwargs):
@@ -142,15 +140,15 @@ class ToyEmissionLineUniverse(object):
         this, but there could still be room for similar issues.
         """
         assert all(k not in self.zdep_attrs for k in kwargs.keys()), \
-            'It looks like you provided 1+ args for ToyGalaxyPopulation.'\
-            '\nPlease only provide args for ToyEmissionLineUniverse!'
+            'It looks like you provided 1+ args for Population.'\
+            '\nPlease only provide args for Universe!'
 
         mt.set_attrs(self,self.init_args,overwrite=False,**kwargs)
         mt.set_slope_sfr(self,self.slope_lo_sfr,self.slope_hi_sfr)
         
-        # Also need to update `ToyGalaxyPopulation` for consistency.
+        # Also need to update `Population` for consistency.
 
-        # 1. Get kwargs that have exact matches for `ToyGalaxyPopulation` args
+        # 1. Get kwargs that have exact matches for `Population` args
         pop_kwargs = {key:value for key, value in kwargs.items() \
                       if key in self.pop.init_args.keys()}
 
@@ -167,7 +165,7 @@ class ToyEmissionLineUniverse(object):
     @cached_property
     def zdep_attrs(self):
         """
-        Any parameters in `ToyGalaxyPopulation` that have some redshift
+        Any parameters in `Population` that have some redshift
         scaling.
         """
         attrs = self.init_args.keys()
@@ -241,12 +239,12 @@ class ToyEmissionLineUniverse(object):
     def update_pop_z(self,z):
         """
         Perform redshift scaling on any relevant parameters in
-        `ToyGalaxyPopulation`. Currently, only `mmin`, `norm_sfr`, and
+        `Population`. Currently, only `mmin`, `norm_sfr`, and
         `norm_Av` are redshift-dependent. This does **NOT** update `hmf`, nor
-        does it change any parameters of `ToyEmissionLineUniverse`.
+        does it change any parameters of `Universe`.
 
         To make some other parameter `foo` redshift-dependent, you must have a
-        variable `foo_z` defined upon initializing `ToyEmissionLineUniverse`,
+        variable `foo_z` defined upon initializing `Universe`,
         as well as a public method `get_foo(z)` that will perform the redshift
         scaling using `foo_z` and any other `foo`-related args.
         """

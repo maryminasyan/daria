@@ -7,7 +7,7 @@ from ..utils.constants import c, m_per_mpc, erg_per_s_per_nW, sqdeg_per_std
 from . import model_tools as mt
 from . import cosmo_tools as ct
 
-class ToyGalaxyPopulation(object):
+class Population(object):
     def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=11,\
                  mask=12,mmin=8,rturn=np.inf,norm_sfr=-3.65,mbreak_sfr=10.8,\
                  slope_lo_sfr=0.85,slope_hi_sfr=3.05,norm_Av=1.5,slope_Av=0,\
@@ -18,7 +18,7 @@ class ToyGalaxyPopulation(object):
         Initialize a toy model capable of (for now) doing cross-correlations
         between a galaxy sample and intensity map. For more information on
         what kwargs to provide for different metal_line_model inputs, see
-        the `ToyEmissionLineUniverse` init docstring.
+        the `Universe` init docstring.
         """
         self.target_prop = target_prop
         self.metal_line_model = mt.get_metal_line_model(metal_line_model)
