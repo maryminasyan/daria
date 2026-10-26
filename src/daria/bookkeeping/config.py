@@ -65,5 +65,6 @@ class Config:
     def create_directories(self):
         for dir_attr,_ in self._DIRS_FROM_CONFIG_SETUP_SPECS:
             dir_path = getattr(self,dir_attr)
-            print(f'Creating directory: {dir_path}')
-            os.makedirs(dir_path,exist_ok=True)
+            if not os.path.exists(dir_path):
+                print(f'Creating directory: {dir_path}')
+                os.makedirs(dir_path,exist_ok=True)
