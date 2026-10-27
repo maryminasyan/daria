@@ -27,6 +27,12 @@ class DESI(object):
             assert self.sample in ['BGS_ANY','BGS_BRIGHT','LRG','QSO',\
                                    'BGS_BRIGHT-21.5','ELG_LOPnotqso']
             self.field = kwargs.pop('field','NGC').upper()
+        elif self.subdir == 'dr1_lss_v1.2':
+            assert self.sample in ['BGS_ANY','BGS_BRIGHT','BGS_ANY_full',\
+                                   'BGS_BRIGHT-21.5','LRG','LRG_full',\
+                                   'ELG_LOPnotqso','ELG_LOPnotqso_full',\
+                                   'QSO','QSO_full']
+            self.field = kwargs.pop('field','NGC').upper()
         else:
             assert self.subdir == '2024_bao'
             assert self.sample in ['BGS','ELG','LRG','QSO']
@@ -41,7 +47,7 @@ class DESI(object):
         self.fsky = self.__get_fsky()
         
     def __assemble_catalog_fn(self):
-        if self.subdir == 'dr1_lss_v1.5':
+        if self.subdir in ['dr1_lss_v1.2','dr1_lss_v1.5']:
             return f'{self.sample}_{self.field}_nz.txt'
         else:
             assert self.subdir == '2024_bao', 'Invalid subdir'
@@ -57,7 +63,7 @@ class DESI(object):
         nz = self.__get_nz_file()
         if subdir == '2024_bao':
             z_ok = nz[:,0]
-            dndV = nz[:,1] * self.h**3 # provided in (h/Mpc)^3
+            dndV = nz[:,1] * 1e-4 * self.h**3 # provided in 1e-4 (h/Mpc)^3
         else:
             z_ok = nz[:,0]
             # avoid interpolation boundary condition issues at edges of z range
@@ -82,7 +88,7 @@ class DESI(object):
         return bias
 
     def __get_fsky(self):
-        if self.subdir == 'dr1_lss_v1.5':
+        if self.subdir in ['dr1_lss_v1.2','dr1_lss_v1.5']:
             with open(self.path) as f:
                 next(f) # full area
                 line = next(f) # effective area
@@ -110,5 +116,5 @@ class DESI(object):
         return target_prop
 
     def label(self):
-        field = f'_{self.field}' if self.subdir == 'dr1_lss_v1.5' else ''
-        return f'desi_{self.subdir}_{self.sample}{self.field}'
+        field = f'_{self.field}' if self.subdir.startswith('dr1_lss') else ''
+        return f'desi_{self.subdir}_{self.sample}{field}'
