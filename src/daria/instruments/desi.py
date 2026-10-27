@@ -104,7 +104,8 @@ class DESI(object):
         target_prop = {
             'dndV': self.dndV,
             'bias': self.bias,
-            'fsky': self.fsky
+            'fsky': self.fsky,
+            'label': self.label()
             }
         return target_prop
 

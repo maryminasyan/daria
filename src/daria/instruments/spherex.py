@@ -66,6 +66,19 @@ class SPHEREx(object):
         Cl_noise = sigma_noise**2 * self.beam # nW2 m-4 sr-1
         return Cl_noise.value
 
+    def get_wl_edges(self):
+        wl_bins = self.wl_bins
+        # [band_R[0], band_R[0], ... , band_R[1], ..., band_R[5] 17 times each]
+        R_bins = np.array([[self.band_R[i]] * self.chs_per_array \
+                           for i in range(len(self.band_R))]).flatten()
+        dwls = wl_bins / R_bins
+        wl_edges = np.array([[wl_bins - (dwls/2)],\
+                             [wl_bins + (dwls/2)]]).T.squeeze(axis=1)
+        return wl_edges
+        
+    def label(self):
+        return f'inst_spherex_{self.field}'
+    
 class SPHERExCat(object):
     def __init__(self,zerr_type=2):
         self.zerr_type = zerr_type
@@ -99,6 +112,7 @@ class SPHERExCat(object):
         keys = ['dndV','bias','fsky']
         for key in keys:
             target_prop[key] = getattr(self,key)
+        target_prop['label'] = self.label()
         return target_prop
 
     def label(self):
