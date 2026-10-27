@@ -3,6 +3,7 @@ from functools import cached_property
 from ..utils.line_info import line_names
 from .population import Population
 from . import model_tools as mt
+import os
 
 class Universe(object):
     """
@@ -511,3 +512,24 @@ class Universe(object):
         ps_tot = self.get_ps_tot(scales,waves,sum_lines=True)
         ps_tot = ps_tot.diagonal()
         return ps_tot
+
+    def label(self):
+        tp_label = mt.get_target_prop_label(self.target_prop)
+        metal_label = mt.get_metal_label(self)
+        conti_label, mask_label = mt.get_conti_mask_label(self)
+        lines_label = 'lines'
+        lines_label = 'lines' + '_'.join(self.include_lines)
+        mmin_label = f'mmin0_{self.mmin_0:.3f}_z{self.mmin_z:.3f}'
+        rturn_label = mt.get_rturn_label(self.rturn)
+        dust_label = f'dust0_{self.norm_Av_0:.3f}_z{self.norm_Av_z:.3f}_slope{self.slope_Av:.3f}'
+        sfr_label = f'sfr0_{self.norm_sfr_0:.3f}_a{self.norm_sfr_a:.3f}_z{self.norm_sfr_z:.3f}_logz{self.norm_sfr_z:.3f}'
+        sfr_mbreak_label = f'sfr_mbreak0_{self.mbreak_sfr_0}_z{self.mbreak_sfr_z}'
+        sfr_slope_label = mt.get_sfr_slope_label(self.slope_lo_sfr,\
+                                                 self.slope_hi_sfr)
+        sfr_ext_label = mt.get_sfr_ext_label(self.sfr_ext_a,self.sfr_ext_b)
+
+        label = os.path.join('univ',tp_label,conti_label,mask_label,\
+                             mmin_label,rturn_label,dust_label,sfr_label,\
+                             sfr_mbreak_label,sfr_slope_label,sfr_ext_label,\
+                             metal_label)
+        return label

@@ -1,5 +1,5 @@
 import numpy as np
-import copy
+import copy, os
 from ..utils.line_info import line_rwaves
 
 def set_slope_sfr(obj,slope_lo_sfr,slope_hi_sfr):
@@ -153,3 +153,42 @@ def get_channel_zbin(channel,line,do_corr=True):
     if single_bin:
         zbins_out = zbins_out.flatten()
     return zbins_out, z_cen_out
+
+def get_target_prop_label(target_prop):
+    if target_prop is None:
+        return 'no_cat'
+    else:
+        return target_prop['label']
+
+def get_metal_label(obj):
+    model = copy.deepcopy(obj.metal_line_model)
+    label = f'metals_{model}'
+    if model == 'l_sfr':
+        return label
+    else:
+        default_dict = get_default_dict(model)
+        keys = default_dict.keys()
+        for key in keys:
+            attr = getattr(obj,key)
+            label = os.path.join(label,f'{key}{attr:.3f}')
+        return label
+            
+def get_rturn_label(rturn):
+    rturn_str = 'flat' if rturn == np.inf else f'{rturn:.3f}'
+    return f'rturn_{rturn_str}'
+
+def get_conti_mask_label(obj):
+    conti = getattr(obj,'continuum_model',None)
+    if conti is None:
+        conti_label = 'no_conti'
+        mask_label = f'mlim{obj.mlim:.3f}_mask{obj.mask:.3f}'
+    else:
+        conti_label = 'helgason' # presumably
+        mask_label = f'mask_mag{obj.mask_mag:.2f}_wl{obj.mask_wl:.3f}'
+    return conti_label, mask_label
+
+def get_sfr_slope_label(slope_lo,slope_hi):
+    return f'sfr_slope_a{slope_lo:.3f}_b{slope_hi:.3f}'
+
+def get_sfr_ext_label(ext_a,ext_b):
+    return f'sfr_ext_a{ext_a:.3f}_b{ext_b:.3f}'

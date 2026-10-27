@@ -6,6 +6,7 @@ from ..utils.line_info import line_rwaves, line_lpersfr
 from ..utils.constants import c, m_per_mpc, erg_per_s_per_nW, sqdeg_per_std
 from . import model_tools as mt
 from . import cosmo_tools as ct
+import os
 
 class Population(object):
     def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=11,\
@@ -875,3 +876,20 @@ class Population(object):
         sfr = self.get_sfr(m)
         mstel = self.get_stellar_mass(m)
         return sfr/mstel
+
+    def label(self):
+        tp_label = mt.get_target_prop_label(self.target_prop)
+        metal_label = mt.get_metal_label(self)
+        _, mask_label = mt.get_conti_mask_label(self)
+        mmin_label = f'mmin{self.mmin:.3f}'
+        rturn_label = mt.get_rturn_label(self.rturn)
+        dust_label = f'dust_norm{self.norm_Av:.3f}_slope{self.slope_Av:.3f}'
+        sfr_label = f'sfr_norm{self.norm_sfr:.3f}_mbreak{self.mbreak_sfr:.3f}'
+        sfr_slope_label = mt.get_sfr_slope_label(self.slope_lo_sfr,\
+                                                 self.slope_hi_sfr)
+        sfr_ext_label = mt.get_sfr_ext_label(self.sfr_ext_a,self.sfr_ext_b)
+        label = os.path.join('pop',tp_label,mask_label,mmin_label,rturn_label,\
+                             dust_label,sfr_label,sfr_slope_label,\
+                             sfr_ext_label,metal_label)
+        return label
+        
