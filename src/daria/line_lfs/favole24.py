@@ -79,5 +79,5 @@ class Favole24(object):
         return data
 
     def label(self,line='Ha'):
-        dust_str = '_obs' if self.dust else '_intrr'
+        dust_str = '_obs' if self.dust else '_intr'
         return f'favole24_{line}{dust_str}'
