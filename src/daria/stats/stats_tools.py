@@ -1,16 +1,18 @@
 import numpy as np
 from ..utils.line_info import line_rwaves, line_names
 
-def get_streak_mtx(line,z_edges_2d,wl_centers,wl_edges):
+def get_streak_mtx(line,z_edges,wl_edges):
+    # z_edges and wl_edges should be 2d arrays
+    wl_centers = np.mean(wl_edges,axis=1)
     line_rwave = line_rwaves[line]
-    dz = np.diff(z_edges_2d,axis=1)[:,0]
-    z_e = z_edges_2d[:,0]
-    mtx = np.zeros((len(wl_centers),len(z_edges_2d)))
+    dz = np.diff(z_edges,axis=1)[:,0]
+    z_e = z_edges[:,0]
+    mtx = np.zeros((len(wl_centers),len(z_edges)))
     for i, ch in enumerate(wl_centers):
         zlo,zhi = (wl_edges[i] * 1e4 / line_rwave) - 1
-        if (zlo > z_edges_2d[-1,-1]):
+        if (zlo > z_edges[-1,-1]):
             continue
-        if (zhi < z_edges_2d[0,0]):
+        if (zhi < z_edges[0,0]):
             continue
         jlo = np.digitize(zlo,bins=z_e)
         jhi = np.digitize(zhi,bins=z_e)
@@ -23,8 +25,8 @@ def get_streak_mtx(line,z_edges_2d,wl_centers,wl_edges):
             mtx[i,jlo] = (zhi - zlo) / dz[jlo]
             continue
 
-        mtx[i,jlo] = (z_edges_2d[jlo,1] - zlo) / dz[jlo]
-        mtx[i,jhi] = (zhi - z_edges_2d[jhi,0]) / dz[jhi]
+        mtx[i,jlo] = (z_edges[jlo,1] - zlo) / dz[jlo]
+        mtx[i,jhi] = (zhi - z_edges[jhi,0]) / dz[jhi]
 
         if jhi > (jlo + 1):
             for j in range(jlo+1,jhi):
@@ -34,7 +36,7 @@ def get_streak_mtx(line,z_edges_2d,wl_centers,wl_edges):
 
 def fit_z_label(fit_z):
     if isinstance(fit_z,str):
-        zlabel = 'all'
+        zlabel = '_all'
     else:
         zlabel = '_'.join(f'{z}:.2f' for z in fit_z)
     return 'z' + zlabel
