@@ -1,5 +1,5 @@
 import numpy as np
-from ..utils.line_info import line_rwaves
+from ..utils.line_info import line_rwaves, line_names
 
 def get_streak_mtx(line,z_edges_2d,wl_centers,wl_edges):
     line_rwave = line_rwaves[line]
@@ -31,5 +31,23 @@ def get_streak_mtx(line,z_edges_2d,wl_centers,wl_edges):
                 mtx[i,j] = 1
 
     return mtx
-        
-    
+
+def fit_z_label(fit_z):
+    if isinstance(fit_z,str):
+        zlabel = 'all'
+    else:
+        zlabel = '_'.join(f'{z}:.2f' for z in fit_z)
+    return 'z' + zlabel
+
+def fit_lines_label(fit_lines):
+    if fit_lines == 'all':
+        lines_label = '_all'
+    else:
+        lines_label = '_'.join(fit_lines)
+    return 'lines' + lines_label
+
+def get_lines_fit(fit_lines):
+    if fit_lines == 'all':
+        return line_names
+    else:
+        return fit_lines
