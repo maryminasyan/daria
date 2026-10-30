@@ -2,8 +2,9 @@ from hmf import MassFunction
 import numpy as np
 
 def init_hmf(Mmin=4,Mmax=16,hmf_model='Tinker10'):
+    transfer_params = {'extrapolate_with_eh': True} # avoid warning
     return MassFunction(z=0,Mmin=Mmin,Mmax=Mmax,dlog10m=0.01,\
-                        hmf_model=hmf_model)
+                        hmf_model=hmf_model,transfer_params=transfer_params)
 
 def get_halo_bias(hmf,z):
     hmf.update(z=z)
