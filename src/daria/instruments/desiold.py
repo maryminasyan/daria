@@ -46,7 +46,10 @@ class DESIOld(object):
             raise AssertionError('unsupported sample')
 
     def get_target_prop(self):
-        target_prop = {'dndV': self.dndV, 'bias': self.bias}
+        target_prop = {'dndV': self.dndV,
+                       'bias': self.bias,
+                       'label': self.label(),
+                       'fsky': 1}
         return target_prop
     
     def label(self):
