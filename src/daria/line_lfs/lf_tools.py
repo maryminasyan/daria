@@ -63,4 +63,11 @@ def plot_lf_compilation(data,line,vrange,with_center=False,dpi=150,\
                   fontsize=label_fontsize)
     ax.tick_params(axis='both',which='major',labelsize=ticksize)
 
+    sm = ScalarMappable(norm=norm, cmap=cmap)
+    sm.set_array([])
+
+    cbar = fig.colorbar(sm, ax=ax)
+    cbar.set_label(r'$\rm{z}$',fontsize=label_fontsize)
+    cbar.ax.tick_params(labelsize=label_fontsize)
+    
     return fig, ax
