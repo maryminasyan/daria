@@ -16,3 +16,51 @@ def replace_phi(model,data_dict,lines):
         phi_obs = np.random.normal(loc=phi_true,scale=err)
         data_dict[z]['phi'] = phi_obs
     return data_dict
+
+def get_lf_xlabel(line):
+    from ..utils.line_info import line_labels
+    line_label = line_labels[line]
+    xlabel = rf'$\log_{{10}} L_{{\mathrm{{{line_label}}}}} / [\rm{{erg}} \ \rm{{s}}^{{-1}}]$'
+    return xlabel
+
+def plot_lf_compilation(data,line,vrange,with_center=False,dpi=150,\
+                        xlim=None,ylim=None,cmap='rainbow',alpha_grid=0.2,
+                        alpha_lf=0.8,label_fontsize='x-large',ticksize=12):
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import Normalize, LogNorm
+    from matplotlib.cm import ScalarMappable
+
+    z_line = np.array(list(data.keys()))
+    z_line.sort()
+    cmap = plt.get_cmap(cmap)
+    vmin, vmax = vrange
+    norm = Normalize(vmin=vmin,vmax=vmax)
+
+    fig, ax = plt.subplots(dpi=dpi)
+    if alpha_grid:
+        ax.grid(alpha=alpha_grid)
+
+    for z in z_line:
+        log10L = data[z]['log10L']
+        phi = data[z]['phi']
+        phi_err = data[z]['phi_err']
+
+        color = cmap(norm(z))
+
+        if with_center:
+            ax.plot(log10L,phi,color=color,ls='-',lw=1,alpha=alpha_lf)
+        ax.fill_between(log10L,phi+phi_err,y2=phi-phi_err,\
+                        color=color,alpha=alpha_lf)
+
+    if xlim is not None:
+        ax.set_xlim(xlim[0],xlim[1])
+    if ylim is not None:
+        ax.set_ylim(ylim[0],ylim[1])
+
+    xlabel = get_lf_xlabel(line)
+    ax.set_xlabel(xlabel,fontsize=label_fontsize)
+    ax.set_ylabel(r'$\phi(L) \ [\rm{cMpc}^{-3} \ \rm{dex}^{-1}]$',\
+                  fontsize=label_fontsize)
+    ax.tick_params(axis='both',which='major',labelsize=ticksize)
+
+    return fig, ax

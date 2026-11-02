@@ -47,7 +47,27 @@ line_rwaves = \
         'Bra': 4.051e4,
         'Brb': 2.625e4,
         'Brg': 2.166e4
-    }        
-        
-        
-                
+    }
+
+line_labels = {
+    'Ha': r'H\alpha',
+    'Hb': r'H\beta',
+    'Hg': r'H\gamma',
+    'Hd': r'H\delta',
+    'He': r'H\epsilon',
+    'OIII_5007': r'[OIII(5007)]',
+    'OIII_4959': r'[OIII(4959)]',
+    'OIII': r'[OIII]',
+    'OII': r'[OII]',
+    'Pa': r'Pa\alpha',
+    'Pab': r'Pa\beta',
+    'Pag': r'Pa\gamma',
+    'PAH': r'PAH',
+    'NII': r'[NII]',
+    'Bra': r'Br\alpha',
+    'Brb': r'Br\beta',
+    'Brg': r'Br\gamma',
+    'Lya': r'Ly\alpha',
+    'HaNII': r'H\alpha + [NII]',
+    'HbOIII': r'H\beta + [OIII]'
+    }
