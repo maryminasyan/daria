@@ -240,8 +240,7 @@ class FitVisualizer(object):
 
     @plot_style
     def plot_Aline_vs_mh(self,z,logmrange=(8,16),alpha=0.2,fn=None,dpi=200,\
-                         layout='tight',alpha_grid=0.25,xlim=None,ylim=None,\
-                         alpha_grid=0.25):
+                         layout='tight',alpha_grid=0.25,xlim=None,ylim=None):
 
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
@@ -305,8 +304,7 @@ class FitVisualizer(object):
         return fig, ax
 
     def plot_sfr_vs_mh(self,z,logmrange=(8,16),alpha=0.2,fn=None,dpi=200,\
-                       layout='tight',alpha_grid=0.25,xlim=None,ylim=None,\
-                       alpha_grid=0.25):
+                       layout='tight',alpha_grid=0.25,xlim=None,ylim=None):
 
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
