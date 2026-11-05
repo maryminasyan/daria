@@ -123,7 +123,7 @@ class FitVisualizer(object):
         sfrds_arr = np.zeros((fchain.shape[0],len(z)))
         model = self.model
         for i in range(fchain.shape[0]):
-            param_dict = self.make_param_dict(fchain[-i])
+            param_dict = self.make_param_dict(fchain[i])
             model.update(**param_dict)
             sfrd = model.get_sfrd(z,sfr_lim=sfr_lim)
             sfrds_arr[i][:] = sfrd
@@ -215,7 +215,7 @@ class FitVisualizer(object):
         fchain = self.get_thin_fchain(discard=discard,thin=thin)
         for i in range(fchain.shape[0]):
             att_plt = np.zeros_like(z_plt)
-            params_dict = self.make_params_dict(fchain[i])
+            params_dict = self.make_param_dict(fchain[i])
             for j, z_j in enumerate(z_plt):
                 model.update_pop_z(z_j)
                 att_plt[j] = model.pop.get_dust_attenuation(10**logmh,\
