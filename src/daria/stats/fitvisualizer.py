@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import functools
+from ..utils.line_info import line_labels
 
 def plot_style(method):
     @functools.wraps(method)
@@ -19,19 +20,18 @@ class FitVisualizer(object):
             - params, i.e., list of parameter names
             - lnprob, with shape (nwalkers, nsteps)
             - data (i.e., the data fed into the emcee sampler object)
+            Code WILL fail if you do not have these items!
         model: Model used to run fit (optional unless you want to use the
             SFRD plotting convenience method)
         style: default (light background) or dark_background
         '''
-        nwalkers, nsteps, nparams = fit_results['chain'].shape
+        desired_attrs = ['params','lnprob','chain','fchain','data']
+        for attr in desired_attr:
+            setattr(self,attr,fit_results[attr])
+        nwalkers, nsteps, nparams = self.chain.shape
         self.nwalkers = nwalkers
         self.nsteps = nsteps
         self.nparams = nparams
-        self.params = fit_results['params']
-        self.lnprob = fit_results['lnprob']
-        self.chain = fit_results['chain']
-        self.fchain = fit_results['fchain']
-        self.data = fit_results['data']
         self.style = style.lower() # default or dark_background
         self.model = model
 
@@ -169,5 +169,103 @@ class FitVisualizer(object):
 
         if return_sfrds:
             return fig, ax, sfrds_arr
+        
+        return fig, ax
+
+    @plot_style
+    def plot_bpt(self,log_mmin_plt,log_mmax_plt,fn=None,\
+                 dpi=200,layout='tight',discard=1000,thin=200,\
+                 xlim=None,ylim=None,alpha=0.5,alpha_grid=0.25):
+        fig, ax = plt.subplots(dpi=dpi,layout=layout)
+        model = self.model
+        m = model.pop.m[model.pop.m > 10**log_mmin_plt]
+        m = m[m < 10**log_mmax_plt]
+
+        fchain = self.get_thin_fchain(discard=discard,thin=thin)
+        for i in range(fchain.shape[0]):
+            param_dict = self.make_param_dict(fchain[i])
+            model.update(**param_dict)
+            n2_i, o3_i = model.pop.get_bpt(m)
+            ax.plot(n2_i,o3_i,lw=0.5,alpha=alpha,color='tab:blue')
+
+        ax.set_xlabel(r'$\log(L_{\rm{[NII]}}/L_{\rm{H\alpha}})$',\
+                      size='x-large')
+        ax.set_ylabel(r'$\log(L_{\rm{[OIII]}}/L_{\rm{H\beta}})$',\
+                      size='x-large')
+        if alpha_grid:
+            ax.grid(alpha=alpha_grid)
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.tick_params(labelsize=12)
+
+        if fn is not None:
+            fig.savefig(fn)
+
+        return fig, ax
+
+    @plot_style
+    def plot_Aline_vs_z(self,logmh,line='Ha',zrange=(0,6),alpha=0.05,\
+                        fn=None,dpi=200,layout='tight',alpha_grid=0.25,\
+                        xlim=None,ylim=None):
+        z_plt = np.linspace(zrange[0],zrange[1],100)
+        fig, ax = plt.subplots(dpi=dpi,layout=layout)
+        model = self.model
+        
+        fchain = self.get_thin_fchain(discard=discard,thin=thin)
+        for i in range(fchain.shape[0]):
+            att_plt = np.zeros_like(z_plt)
+            params_dict = self.make_params_dict(fchain[i])
+            for j, z_j in enumerate(z_plt):
+                model.update_pop_z(z_j)
+                att_plt[j] = model.pop.get_dust_attenuation(10**logmh,\
+                                                            line=line)
+            ax.plot(z_plt,att_plt,color='tab:blue',alpha=0.05)
+
+        if alpha_grid:
+            ax.grid(alpha=alpha_grid)
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        
+        ax.set_xlabel('z')
+        line_label = line_labels[line]
+        ax.set_ylabel(rf'$\rm{{A_{{{line_label}}}}}$')
+        ax.set_title(rf'$\rm{{A_{{{line_label}}} \ at}} \ \log (\rm{{M_h/M_\odot}}) = {logmh} $')
+
+        if fn is not None:
+            fig.savefig(fn)
+
+        return fig, ax
+
+    @plot_style
+    def plot_sfr_vs_z(self,logmh,zrange=(0,6),alpha=0.05,\
+                      fn=None,dpi=200,layout='tight',alpha_grid=0.25,\
+                      xlim=None,ylim=None):
+        z_plt = np.linspace(zrange[0],zrange[1],100)
+        fig, ax = plt.subplots(dpi=dpi,layout=layout)
+        model = self.model
+
+        fchain = self.get_thin_fchain(discard=discard,thin=thin)
+        for i in range(fchain.shape[0]):
+            sfr_plt = np.zeros_like(z_plt)
+            params_dict = self.make_params_dict(fchain[i])
+            for j, z_j in enumerate(z_plt):
+                model.update_pop_z(z_j)
+                sfr_plt[j] = model.pop.get_sfr(10**logmh)
+            ax.semilogy(z_plt,sfr_plt,color='tab:blue',alpha=0.05)
+        
+        if alpha_grid:
+            ax.grid(alpha=alpha_grid)
+        
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        
+        ax.set_xlabel('z')
+        ax.set_ylabel(r'$\rm{SFR \ [M_{\odot} \ yr^{-1}]}$')
+        ax.set_title(rf'$\rm{{SFR \ [M_{{\odot}} \ yr^{{-1}}] \ at}} \ \log (\rm{{M_h/M_\odot}}) = {logmh} $')
+        
+        if fn is not None:
+            fig.savefig(fn)
         
         return fig, ax
