@@ -239,6 +239,40 @@ class FitVisualizer(object):
         return fig, ax
 
     @plot_style
+    def plot_Aline_vs_mh(self,z,logmrange=(8,16),alpha=0.2,fn=None,dpi=200,\
+                         layout='tight',alpha_grid=0.25,xlim=None,ylim=None,\
+                         alpha_grid=0.25):
+
+        fig, ax = plt.subplots(dpi=dpi,layout=layout)
+        model = self.model
+        logm_min, logm_max = logmrange
+        m = model.pop.m[model.pop.m > 10**logm_min]
+        m = m[m < 10**logm_max]
+
+        fchain = self.get_thin_fchain(discard=discard,thin=thin)
+        for i in range(fchain.shape[0]):
+            param_dict = self.make_param_dict(fchain[i])
+            model.update(**param_dict)
+            att = model.pop.get_dust_attenuation(m,line=line)
+            ax.plot(np.log10(m),att,lw=0.5,alpha=alpha,color='tab:blue')
+
+        if alpha_grid:
+            ax.grid(alpha=alpha_grid)
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
+        ax.set_xlabel(r'$\log\rm{M_h / M_{\odot}}$')
+        line_label = line_labels[line]
+        ax.set_ylabel(rf'$\rm{{A_{{{line_label}}}}}$')
+        ax.set_title(rf'$\rm{{A_{{{line_label}}}}} \ \rm{{at \ z = {z:.2f}}}$')
+
+        if fn is not None:
+            fig.savefig(fn)
+
+        return fig, ax
+
+    @plot_style
     def plot_sfr_vs_z(self,logmh,zrange=(0,6),alpha=0.05,\
                       fn=None,dpi=200,layout='tight',alpha_grid=0.25,\
                       xlim=None,ylim=None):
@@ -268,4 +302,37 @@ class FitVisualizer(object):
         if fn is not None:
             fig.savefig(fn)
         
+        return fig, ax
+
+    def plot_sfr_vs_mh(self,z,logmrange=(8,16),alpha=0.2,fn=None,dpi=200,\
+                       layout='tight',alpha_grid=0.25,xlim=None,ylim=None,\
+                       alpha_grid=0.25):
+
+        fig, ax = plt.subplots(dpi=dpi,layout=layout)
+        model = self.model
+        logm_min, logm_max = logmrange
+        m = model.pop.m[model.pop.m > 10**logm_min]
+        m = m[m < 10**logm_max]
+
+        fchain = self.get_thin_fchain(discard=discard,thin=thin)
+        for i in range(fchain.shape[0]):
+            param_dict = self.make_param_dict(fchain[i])
+            model.update(**param_dict)
+            sfr = model.pop.get_sfr(m)
+            ax.plot(np.log10(m),np.log10(sfr),lw=0.5,alpha=alpha,\
+                    color='tab:blue')
+
+        if alpha_grid:
+            ax.grid(alpha=alpha_grid)
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
+        ax.set_xlabel(r'$\log\rm{M_h / M_{\odot}}$')
+        ax.set_ylabel(r'$\log\rm{SFR / [M_{\odot} \ yr^{-1}]}$')
+        ax.set_title(rf'$\log\rm{{SFR / [M_{{\odot}} \ yr^{{-1}}]}} \ \rm{{at \ z = {z:.2f}}}$')
+
+        if fn is not None:
+            fig.savefig(fn)
+
         return fig, ax
