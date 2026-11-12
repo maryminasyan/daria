@@ -26,7 +26,7 @@ class FitVisualizer(object):
         style: default (light background) or dark_background
         '''
         desired_attrs = ['params','lnprob','chain','fchain','data']
-        for attr in desired_attr:
+        for attr in desired_attrs:
             setattr(self,attr,fit_results[attr])
         nwalkers, nsteps, nparams = self.chain.shape
         self.nwalkers = nwalkers
@@ -207,7 +207,7 @@ class FitVisualizer(object):
     @plot_style
     def plot_Aline_vs_z(self,logmh,line='Ha',zrange=(0,6),alpha=0.05,\
                         fn=None,dpi=200,layout='tight',alpha_grid=0.25,\
-                        xlim=None,ylim=None):
+                        xlim=None,ylim=None,discard=1000,thin=200):
         z_plt = np.linspace(zrange[0],zrange[1],100)
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
@@ -216,6 +216,7 @@ class FitVisualizer(object):
         for i in range(fchain.shape[0]):
             att_plt = np.zeros_like(z_plt)
             params_dict = self.make_param_dict(fchain[i])
+            model.update(**params_dict)
             for j, z_j in enumerate(z_plt):
                 model.update_pop_z(z_j)
                 att_plt[j] = model.pop.get_dust_attenuation(10**logmh,\
@@ -239,11 +240,13 @@ class FitVisualizer(object):
         return fig, ax
 
     @plot_style
-    def plot_Aline_vs_mh(self,z,logmrange=(8,16),alpha=0.2,fn=None,dpi=200,\
-                         layout='tight',alpha_grid=0.25,xlim=None,ylim=None):
+    def plot_Aline_vs_mh(self,z,logmrange=(8,16),line='Ha',alpha=0.2,fn=None,\
+                         dpi=200,layout='tight',alpha_grid=0.25,xlim=None,\
+                         ylim=None,discard=1000,thin=200):
 
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
+        model.update_pop_z(z)
         logm_min, logm_max = logmrange
         m = model.pop.m[model.pop.m > 10**logm_min]
         m = m[m < 10**logm_max]
@@ -272,9 +275,9 @@ class FitVisualizer(object):
         return fig, ax
 
     @plot_style
-    def plot_sfr_vs_z(self,logmh,zrange=(0,6),alpha=0.05,\
-                      fn=None,dpi=200,layout='tight',alpha_grid=0.25,\
-                      xlim=None,ylim=None):
+    def plot_sfr_vs_z(self,logmh,zrange=(0,6),alpha=0.05,fn=None,dpi=200,\
+                      layout='tight',alpha_grid=0.25,xlim=None,ylim=None,\
+                      discard=1000,thin=200):
         z_plt = np.linspace(zrange[0],zrange[1],100)
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
@@ -283,6 +286,7 @@ class FitVisualizer(object):
         for i in range(fchain.shape[0]):
             sfr_plt = np.zeros_like(z_plt)
             params_dict = self.make_params_dict(fchain[i])
+            model.update(**params_dict)
             for j, z_j in enumerate(z_plt):
                 model.update_pop_z(z_j)
                 sfr_plt[j] = model.pop.get_sfr(10**logmh)
@@ -303,11 +307,14 @@ class FitVisualizer(object):
         
         return fig, ax
 
+    @plot_style
     def plot_sfr_vs_mh(self,z,logmrange=(8,16),alpha=0.2,fn=None,dpi=200,\
-                       layout='tight',alpha_grid=0.25,xlim=None,ylim=None):
+                       layout='tight',alpha_grid=0.25,xlim=None,ylim=None,\
+                       discard=1000,thin=200):
 
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
+        model.update_pop_z(z)
         logm_min, logm_max = logmrange
         m = model.pop.m[model.pop.m > 10**logm_min]
         m = m[m < 10**logm_max]
@@ -334,3 +341,40 @@ class FitVisualizer(object):
             fig.savefig(fn)
 
         return fig, ax
+
+    @plot_style
+    def plot_sfr_vs_lum(self,z,logmrange=(8,16),alpha=0.2,alpha_grid=0.25,\
+                        fn=None,dpi=200,layout='tight',xlim=None,ylim=None,\
+                        discard=1000,thin=200):
+
+        fig, ax = plt.subplots(dpi=dpi,layout=layout)
+        model = self.model
+        model.update_pop_z(z)
+        logm_min, logm_max = logmrange
+        m = model.pop.m[model.pop.m > 10**logm_min]
+        m = m[m < 10**logm_max]
+
+        fchain = self.get_thin_fchain(discard=discard,thin=thin)
+        for i in range(fchain.shape[0]):
+            param_dict = self.make_param_dict(fchain[i])
+            model.update(**param_dict)
+            sfr = model.pop.get_sfr(m)
+            lum = model.pop.get_lum_line(m)
+            ax.plot(np.log10(lum),np.log10(sfr),lw=0.5,alpha=alpha,\
+                    color='tab:blue')
+
+        if alpha_grid:
+            ax.grid(alpha=alpha_grid)
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+
+        ax.set_xlabel(r'$\log\rm{L_{H\alpha} / [erg \ s^{-1}]}$')
+        ax.set_ylabel(r'$\log\rm{SFR / [M_{\odot} \ yr^{-1}]}$')
+
+        if fn is not None:
+            fig.savefig(fn)
+
+        return fig, ax
+
+        
