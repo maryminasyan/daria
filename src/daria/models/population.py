@@ -10,9 +10,10 @@ import os
 
 class Population(object):
     def __init__(self,target_prop=None,metal_line_model='l_sfr',mlim=11,\
-                 mask=12,mmin=8,rturn=np.inf,norm_sfr=-3.65,mbreak_sfr=10.8,\
+                 mask=12,mmin=8,rturn=-1,norm_sfr=-3.65,mbreak_sfr=10.8,\
                  slope_lo_sfr=0.85,slope_hi_sfr=3.05,norm_Av=1.5,slope_Av=0,\
-                 sfr_ext_a=0,sfr_ext_b=0,sfr_scatter=False,**kwargs):
+                 sfr_ext_a=0,sfr_ext_b=0,sfr_scatter=False,mocc=12,\
+                 fquench=0,**kwargs):
         """
         Note - mlim, mask, mmin, and norm_sfr are all LOG quantities.
         
@@ -28,6 +29,8 @@ class Population(object):
 
         # Model parameters
         self.mmin = mmin
+        self.mocc = mocc
+        self.fquench = fquench
         self.rturn = rturn
         self.norm_sfr = norm_sfr
         self.mbreak_sfr = mbreak_sfr
@@ -135,7 +138,10 @@ class Population(object):
 
     def get_dust_attenuation(self,m,line='Ha'):
         Av = self.norm_Av * (m / 1e10)**self.slope_Av
-        line_w = line_rwaves[line]
+        if line != 'OIII':
+            line_w = line_rwaves[line]
+        else:
+            line_w = (5007+4959)/2
         iline = np.digitize(line_w, self.tab_dust_waves_e) - 1
         return np.interp(Av,self.tab_dust_Av,\
                          self.tab_dust_attenuation[iline,:])
@@ -178,8 +184,9 @@ class Population(object):
         if self.rturn == np.inf:
             return 1
         else:
-            mmin = self.exponentiate(self.mmin)
-            return 1 - np.exp(-(m / mmin)**self.rturn)
+            #return 1 - np.exp(-(m / mocc)**self.rturn)
+            return (1-self.fquench) * \
+                (1+np.tanh(self.rturn*(np.log10(m)-self.mocc))) / 2
 
     def get_sfrd(self,z,include_mask=True,sfr_lim=None):
         """
@@ -199,12 +206,11 @@ class Population(object):
         sfrd = np.trapezoid(dndlnm * sfr * focc, x=np.log(m))
         return sfrd
 
-    def get_lum_line(self,m,line='Ha'):
+    def get_intrinsic_lum_line(self,m,line='Ha'):
         """
-        Get the line luminosity (reddened by dust) for given `line`.
+        Get the intrinsic line luminosity for given `line`.
         """
         sfr = self.get_sfr(m)
-        Tdust = self.get_dust_transmission(m,line=line)
 
         is_H_line = line.lower().startswith('h') or \
             line in ['Pa','Pab','Pag','Bra','Brb','Brg']
@@ -215,7 +221,7 @@ class Population(object):
         if not metal_line_model and not is_H_line:
             return np.zeros_like(sfr)
         elif (metal_line_model == 'l_sfr') or is_H_line:
-            return sfr * l_per_sfr * Tdust
+            return sfr * l_per_sfr
         else:
             # If we're here, we're doing some kind of BPT+ modeling.
             # First, retrieve *intrinsic* H-a and H-b line emission as
@@ -225,7 +231,7 @@ class Population(object):
 
             N2 = self.N2_norm + self.N2_slope * np.log10(m / 1e10)
             if line == 'NII':
-                return LHa * 10**N2 * Tdust
+                return LHa * 10**N2
             elif line.startswith('OII'):
                 if metal_line_model == 'o3_dep_n2':
                     O3 = self.O3_const + (self.O3_num / (N2 + self.O3_denom))
@@ -234,18 +240,27 @@ class Population(object):
                     O3 = self.O3_norm + self.O3_slope * np.log10(m / 1e10)
 
                 if line == 'OIII_5007':
-                    return LHb * 10**O3 * Tdust
+                    return LHb * 10**O3
                 elif line == 'OIII_4959':
-                    return LHb * 10**O3 * Tdust / 3.
+                    return LHb * 10**O3 / 3
                 elif line == 'OII':
                     # For now, just fixed conversion from OIII
-                    LOIII = (4. / 3.) * LHb * 10**O3 * Tdust
+                    LOIII = (4. / 3.) * LHb * 10**O3
                     return LOIII * line_lpersfr['OII'] / line_lpersfr['OIII']
+                elif line == 'OIII':
+                    return (4/3) * LHb * 10**O3
                 else:
+                    # line is generally true but not for one specific case!
                     raise NotImplemented('shouldnt do total OIII!')
             else:
-                return sfr * l_per_sfr * Tdust
+                return sfr * l_per_sfr
 
+    def get_lum_line(self,m,line='Ha'):
+        ''' Get the observed luminosity (reddened by dust) of some `line`. '''
+        Tdust = self.get_dust_transmission(m,line=line)
+        lum_intr = self.get_intrinsic_lum_line(m,line=line)
+        return lum_intr * Tdust
+    
     def get_lf_line(self,z,line='Ha'):
         """
         Compute the line luminosity function at redshift `z`.

@@ -15,10 +15,10 @@ class Universe(object):
     """
     def __init__(self,target_prop=None,metal_line_model='l_sfr',\
                  continuum_model=None,include_lines='all',mmin_0=8,mmin_z=0,\
-                 rturn=np.inf,norm_sfr_0=-3.65,norm_sfr_a=1.55,norm_sfr_z=0,\
+                 rturn=-1,norm_sfr_0=-3.65,norm_sfr_a=1.55,norm_sfr_z=0,\
                  norm_sfr_logz=0,mbreak_sfr_0=10.8,mbreak_sfr_z=0.635,\
-                 slope_lo_sfr=0.85,slope_hi_sfr=3.05,\
-                 norm_Av_0=1.5,norm_Av_z=-0.3,slope_Av=0,\
+                 slope_lo_sfr=0.85,slope_hi_sfr=3.05,mocc_0=12,mocc_z=1,\
+                 norm_Av_0=1.5,norm_Av_z=-0.3,slope_Av=0,fquench=0,\
                  sfr_ext_a=0,sfr_ext_b=0,**kwargs):
         """
         Note - mlim, mask, mmin_0, and norm_sfr_0 are all LOG quantities.
@@ -80,7 +80,10 @@ class Universe(object):
         # Model parameters
         self.mmin_0 = mmin_0
         self.mmin_z = mmin_z
+        self.mocc_0 = mocc_0
+        self.mocc_z = mocc_z
         self.rturn = rturn
+        self.fquench = fquench
         self.norm_sfr_0 = norm_sfr_0
         self.norm_sfr_a = norm_sfr_a
         self.norm_sfr_z = norm_sfr_z
@@ -126,7 +129,8 @@ class Universe(object):
                               slope_hi_sfr=self.slope_hi_sfr,\
                               norm_Av=self.norm_Av_0,slope_Av=self.slope_Av,\
                               sfr_ext_a=self.sfr_ext_a,\
-                              sfr_ext_b=self.sfr_ext_b,**kwargs)
+                              sfr_ext_b=self.sfr_ext_b,mocc=self.mocc_0,\
+                              fquench=self.fquench,**kwargs)
         self.update_pop_z(0) # hacky way to assign correct mlim and mask...
 
     def update(self,**kwargs):
@@ -188,6 +192,9 @@ class Universe(object):
         ''' log10(mmin) '''
         return np.log10(self.__get_a_pow(z,10**self.mmin_0,self.mmin_z))
 
+    def get_mocc(self,z):
+        return np.log10(self.__get_a_pow(z,10**self.mocc_0,self.mocc_z))
+    
     def get_norm_Av(self,z):
         ''' (not a log) '''
         norm_Av = self.__get_a_pow(z,self.norm_Av_0,self.norm_Av_z)
@@ -240,7 +247,7 @@ class Universe(object):
     def update_pop_z(self,z):
         """
         Perform redshift scaling on any relevant parameters in
-        `Population`. Currently, only `mmin`, `norm_sfr`, and
+        `Population`. Currently, only `mmin`, `norm_sfr`, `mocc`, and
         `norm_Av` are redshift-dependent. This does **NOT** update `hmf`, nor
         does it change any parameters of `Universe`.
 
@@ -520,6 +527,7 @@ class Universe(object):
         lines_label = 'lines'
         lines_label = 'lines' + '_'.join(self.include_lines)
         mmin_label = f'mmin0_{self.mmin_0:.3f}_z{self.mmin_z:.3f}'
+        mocc_label = f'mocc0_{self.mocc_0:.3f}_z{self.mocc_z:.3f}_fq{self.fquench:.3f}'
         rturn_label = mt.get_rturn_label(self.rturn)
         dust_label = f'dust0_{self.norm_Av_0:.3f}_z{self.norm_Av_z:.3f}_slope{self.slope_Av:.3f}'
         sfr_label = f'sfr0_{self.norm_sfr_0:.3f}_a{self.norm_sfr_a:.3f}_z{self.norm_sfr_z:.3f}_logz{self.norm_sfr_z:.3f}'
@@ -529,7 +537,7 @@ class Universe(object):
         sfr_ext_label = mt.get_sfr_ext_label(self.sfr_ext_a,self.sfr_ext_b)
 
         label = os.path.join('univ',tp_label,conti_label,mask_label,\
-                             mmin_label,rturn_label,dust_label,sfr_label,\
-                             sfr_mbreak_label,sfr_slope_label,sfr_ext_label,\
-                             metal_label)
+                             mmin_label,rturn_label,mocc_label,dust_label,\
+                             sfr_label,sfr_mbreak_label,sfr_slope_label,\
+                             sfr_ext_label,metal_label)
         return label
