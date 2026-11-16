@@ -125,14 +125,20 @@ def lnpost(x, *args):
             zs_l = list(lf_l.keys())
             for z_l in zs_l:
                 lf_l_z = lf_l[z_l]
+                keys = list(lf_l_z.keys())
                 logL, phi = model.get_lf_line(z=z_l,line=lines_use)
                 ''' Avoid default np interp boundary conditions and penalize
                 instances where the proposed model has no objects with
                 luminosities at the observed data points. '''
                 ymod_lf_l_z = np.interp(lf_l_z['log10L'],logL,np.log10(phi),
                                         left=100,right=-100)
-                _lnL = -0.5 * (lf_l_z['phi'] - ymod_lf_l_z)**2 / \
-                    lf_l_z['phi_err']**2
+                diff = lf_l_z['phi'] - ymod_lf_l_z
+                if 'phi_err_lo' in keys: # split normal
+                    err = np.where(diff > 0, lf_l_z['phi_err_hi'], \
+                                   lf_l_z['phi_err_lo'])
+                else: # normal
+                    err = lf_l_z['phi_err']
+                _lnL = -0.5 * diff**2 / err**2
                 lnL += np.sum(_lnL)
 
                 if np.any(np.isnan(_lnL)):

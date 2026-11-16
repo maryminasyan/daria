@@ -4,11 +4,12 @@ from .lf_tools import correct_little_h
 class Pang26(object):
     ''' Store and retrieve GLASS-JWST Ha+[NII] LFs. Data is from Pang et al.
     2026. '''
-    def __init__(self,dust=True):
+    def __init__(self,dust=True,sym_err=False):
         self.Av = 1
         self.h = 0.7
         self.planck_h = 0.6766
         self.dust = dust
+        self.sym_err = sym_err
         self.include_NII = True # redundant arg?
         self.line = 'HaNII'
         self.z = [1.3,2.0]
@@ -18,7 +19,6 @@ class Pang26(object):
         self.phi = \
             [ [-1.57,-2.0,-2.19,-2.79,-3.27], \
               [-1.92,-2.06,-2.44,-2.9] ]
-        # split normal likelihood?
         self.phi_err_lo = \
             [ [0.14,0.14,0.17,0.38,1.06], \
               [0.24,0.15,0.28,0.56] ]
@@ -43,7 +43,10 @@ class Pang26(object):
         return attr
     
     def dict_keys(self):
-        return ['log10L','phi','phi_err']#_lo','phi_err_hi']
+        if self.sym_err:
+            return ['log10L','phi','phi_err']
+	else:
+            return ['log10L','phi','phi_err','phi_err_lo','phi_err_hi']
     
     def get_data(self):
         data = {}

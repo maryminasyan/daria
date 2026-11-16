@@ -9,6 +9,7 @@ class Sobral13(object):
         self.h = 0.7
         self.planck_h = 0.6766
         self.dust = dust
+        self.sym_err = True
         self.include_NII = False
         self.line = 'Ha'
         self.z = [0.4,0.84,1.47,2.23]

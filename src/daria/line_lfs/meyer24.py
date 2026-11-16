@@ -3,7 +3,7 @@ from .lf_tools import correct_little_h
 
 class Meyer24(object):
     ''' Store and retrieve [OIII] LFs from Meyer et al 2024 '''
-    def __init__(self,field='combined'):
+    def __init__(self,field='combined',sym_err=False):
         self.field = field.lower()
         # (GOODS-N/S/combined)
         assert self.field in ['north','south','combined'], \
@@ -11,6 +11,7 @@ class Meyer24(object):
         self.h = 0.7
         self.planck_h = 0.6766
         self.dust = True
+        self.sym_err = sym_err
         self.line = 'OIII_5007'
         self.z = [7.1,7.9]
         ''' Some of these points are upper limits and phi_err will be
@@ -59,7 +60,10 @@ class Meyer24(object):
         return attr
     
     def dict_keys(self):
-        return ['log10L','phi','phi_err']
+        if self.sym_err:
+            return ['log10L','phi','phi_err']
+	else:
+            return ['log10L','phi','phi_err','phi_err_lo','phi_err_hi']
     
     def get_data(self):
         data = {}

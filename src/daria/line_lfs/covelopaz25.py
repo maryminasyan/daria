@@ -5,8 +5,9 @@ class CoveloPaz25:
     ''' Ha LFs at z ~ 4-6.5, per Table 1 of
     https://doi.org/10.1051/0004-6361/202452363
     '''
-    def __init__(self,dust=True):
+    def __init__(self,dust=True,sym_err=False):
         self.dust = dust
+        self.sym_err = sym_err
         self.Av = 0.47 # median
         self.h = 0.7
         self.planck_h = 0.6766
@@ -56,7 +57,10 @@ class CoveloPaz25:
         return 10**(-self.Av/2.5)
     
     def dict_keys(self):
-        return ['log10L','phi','phi_err']#_lo','phi_err_hi']
+        if self.sym_err:
+            return ['log10L','phi','phi_err']
+	else:
+            return ['log10L','phi','phi_err','phi_err_lo','phi_err_hi']
     
     def get_data(self):
         data = {}

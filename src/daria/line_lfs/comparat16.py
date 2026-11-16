@@ -4,8 +4,9 @@ from importlib import resources
 from .lf_tools import correct_little_h
 
 class Comparat16(object):
-    def __init__(self):
+    def __init__(self,sym_err=False):
         self.dust = True
+        self.sym_err = sym_err
         self.h = 0.677
         self.planck_h = 0.6766
         self.lines = ['Hb','OIII_5007','OII']
@@ -14,6 +15,8 @@ class Comparat16(object):
         log10L = []
         phi = []
         phi_err = []
+        phi_err_lo = []
+        phi_err_hi = []
         for i,line in enumerate(self.lines):
             file_name = f'{self.line_heads[i]}-data-summary-Planck15.txt'
             fn = resources.files('daria') / f'line_lfs/data/comparat16/{file_name}'
@@ -26,6 +29,8 @@ class Comparat16(object):
             log10L_line = []
             phi_line = []
             phi_err_line = []
+            phi_err_lo_line = []
+            phi_err_hi_line = []
             for z_l in z_line:
                 data_z = data[data['z_mean'] == z_l]
                 log10L_z = np.log10(data_z['L_mean'].values)
@@ -39,15 +44,21 @@ class Comparat16(object):
                 log10L_line.append(log10L_z)
                 phi_line.append(phi_z)
                 phi_err_line.append(phi_err_z)
+                phi_err_lo_line.append(phi_err_lo_z)
+                phi_err_hi_line.append(phi_err_hi_z)
 
             log10L.append(log10L_line)
             phi.append(phi_line)
             phi_err.append(phi_err_line)
+            phi_err_lo.append(phi_err_lo_line)
+            phi_err_hi.append(phi_err_hi_line)
 
         self.z = z
         self.log10L = log10L
         self.phi = phi
         self.phi_err = phi_err
+        self.phi_err_lo = phi_err_lo
+        self.phi_err_hi = phi_err_hi
                   
     def __get_attr_array(self,attr_name,idx,line_idx):
         attr = np.array(getattr(self,attr_name)[line_idx][idx])
@@ -55,7 +66,10 @@ class Comparat16(object):
         return attr
     
     def dict_keys(self):
-        return ['log10L','phi','phi_err']
+        if self.sym_err:
+            return ['log10L','phi','phi_err']
+	else:
+            return ['log10L','phi','phi_err','phi_err_lo','phi_err_hi']
 
     def __get_line_idx(self,line='Hb'):
         if line.lower() == 'hb':

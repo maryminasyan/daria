@@ -3,10 +3,11 @@ from .lf_tools import correct_little_h
 
 class Matthee23(object):
     ''' Store and retrieve [OIII] LFs from Matthee et al 2023 '''
-    def __init__(self):
+    def __init__(self,sym_err=False):
         self.h = 0.674
         self.planck_h = 0.6766
         self.dust = True
+        self.sym_err = sym_err
         self.line = 'OIII_5007'
         # note their discussion about masking z range near bright quasar
         self.z = [6]
@@ -27,7 +28,10 @@ class Matthee23(object):
         return attr
     
     def dict_keys(self):
-        return ['log10L','phi','phi_err']
+        if self.sym_err:
+            return ['log10L','phi','phi_err']
+	else:
+            return ['log10L','phi','phi_err','phi_err_lo','phi_err_hi']
     
     def get_data(self):
         data = {}

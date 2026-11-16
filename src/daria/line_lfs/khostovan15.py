@@ -8,6 +8,7 @@ class Khostovan15(object):
     double count it. '''
     def __init__(self):
         self.dust = True
+        self.sym_err = True
         self.h = 0.7
         self.planck_h = 0.6766
         self.lines = ['HbOIII','OII']

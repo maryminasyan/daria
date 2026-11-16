@@ -4,12 +4,13 @@ from importlib import resources
 from .lf_tools import correct_little_h
 
 class Favole24(object):
-    def __init__(self,population='full',dust=True):
+    def __init__(self,population='full',dust=True,sym_err=False):
         '''
         Populations: full, sf_bpt, sf_ssfr, passive, composite, liner, seyfert
         '''
         self.population = population.lower()
         self.dust = dust
+        self.sym_err = sym_err
         dust_str = 'observed' if self.dust else 'intrinsic'
         file_name = f'{self.population}_{dust_str}_lfs.txt'
         fn = resources.files('daria') / f'line_lfs/data/favole24/{file_name}'
@@ -24,6 +25,8 @@ class Favole24(object):
         log10L = []
         phi = []
         phi_err = []
+        phi_err_lo = []
+        phi_err_hi = []
 
         data = pd.read_csv(fn,sep=';',skiprows=[1,2])
         for i,line_label in enumerate(line_labels):
@@ -32,27 +35,34 @@ class Favole24(object):
             phi_lin = data[f'LF{line_label}'].values
 
             phi_elin = data[f'e_LF{line_label}'].values
-            phi_err_low = np.log10(phi_lin + phi_elin) - np.log10(phi_lin)
-            phi_err_hi = np.log10(phi_lin) - np.log10(phi_lin - phi_elin)
+            phi_err_lo_i = np.log10(phi_lin + phi_elin) - np.log10(phi_lin)
+            phi_err_hi_i = np.log10(phi_lin) - np.log10(phi_lin - phi_elin)
 
             phi_line = [np.log10(phi_lin)]
-            phi_err_line = [np.mean([phi_err_low,phi_err_hi],axis=0)]
+            phi_err_line = [np.mean([phi_err_lo_i,phi_err_hi_i],axis=0)]
 
             log10L.append(log10L_line)
             phi.append(phi_line)
             phi_err.append(phi_err_line)
-
+            phi_err_lo.append(phi_err_lo)
+            phi_err_hi.append(phi_err_hi)
+            
         self.log10L = log10L
         self.phi = phi
         self.phi_err = phi_err
-                  
+        self.phi_err_lo = phi_err_lo
+        self.phi_err_hi = phi_err_hi
+        
     def __get_attr_array(self,attr_name,idx,line_idx):
         attr = np.array(getattr(self,attr_name)[line_idx][idx])
         attr = correct_little_h(attr,attr_name,h_in=self.h)
         return attr
     
     def dict_keys(self):
-        return ['log10L','phi','phi_err']
+        if self.sym_err:
+            return ['log10L','phi','phi_err']
+	else:
+            return ['log10L','phi','phi_err','phi_err_lo','phi_err_hi']
 
     def __get_line_idx(self,line='Ha'):
         if line.lower() == 'ha':
