@@ -70,16 +70,30 @@ class FitVisualizer(object):
     @plot_style
     def plot_params_v_step(self,alpha=0.01,dpi=200,layout='tight',fn=None,\
                            xlim=None,ylim=None,true_vals=None):
+        '''
+        Plot walker trajectories per parameter. If using a synthetic dataset
+        with a known true input, can also provide the true values via:
+        true_vals [list, numpy ndarray, or dict]:
+            - if list or numpy ndarray: values should have 1:1 correspondence
+              with self.params
+            - or can pass dict (this is safer, but make sure any parameters
+              in self.params have a corresponding item in true_vals)
+        '''
         nparams = self.nparams
         fig, axes = plt.subplots(nparams,figsize=(6,4*nparams),dpi=dpi,\
                                  layout=layout)
 
         for j in range(nparams):
+            param_label = self.params[j]
             for i in range(self.nwalkers):
                 axes[j].plot(self.chain[i,:,j],alpha=0.05,color='tab:blue')
             if true_vals is not None:
-                axes[j].hlines(true_vals[j],xmin=0,xmax=shape,color='r')
-            axes[j].set_ylabel(self.params[j])
+                if isinstance(true_vals,dict):
+                    true_val = true_vals[param_label]
+                else: # assume list or array
+                    true_val = true_vals[j]
+                axes[j].hlines(true_val,xmin=0,xmax=self.nsteps,color='r')
+            axes[j].set_ylabel(param_label)
 
         axes[-1].set_xlabel('Step number')
 
