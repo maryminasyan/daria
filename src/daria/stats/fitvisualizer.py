@@ -152,13 +152,13 @@ class FitVisualizer(object):
             per_95 = np.percentile(sfrds_arr,95,axis=0)
             if plot_type == '1sig':
                 ax.fill_between(z,per_16,y2=per_84,alpha=0.3,\
-                                label=label)
+                                label=label,color='tab:blue')
             elif plot_type == '2sig':
                 ax.fill_between(z,per_5,y2=per_95,alpha=0.7,\
-                                label=label)
+                                label=label,color='tab:blue')
             elif plot_type == '1-2sig':
-                ax.fill_between(z,per_16,y2=per_84,alpha=0.7)
-                ax.fill_between(z,per_5,y2=per_95,alpha=0.3)
+                ax.fill_between(z,per_16,y2=per_84,alpha=0.7,color='tab:blue')
+                ax.fill_between(z,per_5,y2=per_95,alpha=0.3,color='tab:blue')
 
         if ref_pts is not None:
             ax.errorbar(z,ref_pts[0],yerr=ref_pts[1],label='Data',
@@ -219,10 +219,12 @@ class FitVisualizer(object):
         return fig, ax
 
     @plot_style
-    def plot_Aline_vs_z(self,logmh,line='Ha',zrange=(0,6),alpha=0.05,\
+    def plot_Aline_vs_z(self,logmh,z_plt='default',line='Ha',alpha=0.05,\
                         fn=None,dpi=200,layout='tight',alpha_grid=0.25,\
                         xlim=None,ylim=None,discard=1000,thin=200):
-        z_plt = np.linspace(zrange[0],zrange[1],100)
+        if isinstance(z_plt,str):
+            assert z_plt == 'default'
+            z_plt = np.linspace(zrange[0],zrange[1],100)
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
         
@@ -260,7 +262,6 @@ class FitVisualizer(object):
 
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
-        model.update_pop_z(z)
         logm_min, logm_max = logmrange
         m = model.pop.m[model.pop.m > 10**logm_min]
         m = m[m < 10**logm_max]
@@ -269,6 +270,7 @@ class FitVisualizer(object):
         for i in range(fchain.shape[0]):
             param_dict = self.make_param_dict(fchain[i])
             model.update(**param_dict)
+            model.update_pop_z(z)
             att = model.pop.get_dust_attenuation(m,line=line)
             ax.plot(np.log10(m),att,lw=0.5,alpha=alpha,color='tab:blue')
 
@@ -289,17 +291,19 @@ class FitVisualizer(object):
         return fig, ax
 
     @plot_style
-    def plot_sfr_vs_z(self,logmh,zrange=(0,6),alpha=0.05,fn=None,dpi=200,\
+    def plot_sfr_vs_z(self,logmh,z_plt='default',alpha=0.05,fn=None,dpi=200,\
                       layout='tight',alpha_grid=0.25,xlim=None,ylim=None,\
                       discard=1000,thin=200):
-        z_plt = np.linspace(zrange[0],zrange[1],100)
+        if isinstance(z_plt,str):
+            assert z_plt == 'default'
+            z_plt = np.linspace(zrange[0],zrange[1],100)
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
 
         fchain = self.get_thin_fchain(discard=discard,thin=thin)
         for i in range(fchain.shape[0]):
             sfr_plt = np.zeros_like(z_plt)
-            params_dict = self.make_params_dict(fchain[i])
+            params_dict = self.make_param_dict(fchain[i])
             model.update(**params_dict)
             for j, z_j in enumerate(z_plt):
                 model.update_pop_z(z_j)
@@ -328,7 +332,6 @@ class FitVisualizer(object):
 
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
-        model.update_pop_z(z)
         logm_min, logm_max = logmrange
         m = model.pop.m[model.pop.m > 10**logm_min]
         m = m[m < 10**logm_max]
@@ -337,6 +340,7 @@ class FitVisualizer(object):
         for i in range(fchain.shape[0]):
             param_dict = self.make_param_dict(fchain[i])
             model.update(**param_dict)
+            model.update_pop_z(z)
             sfr = model.pop.get_sfr(m)
             ax.plot(np.log10(m),np.log10(sfr),lw=0.5,alpha=alpha,\
                     color='tab:blue')
@@ -363,7 +367,6 @@ class FitVisualizer(object):
 
         fig, ax = plt.subplots(dpi=dpi,layout=layout)
         model = self.model
-        model.update_pop_z(z)
         logm_min, logm_max = logmrange
         m = model.pop.m[model.pop.m > 10**logm_min]
         m = m[m < 10**logm_max]
@@ -372,6 +375,7 @@ class FitVisualizer(object):
         for i in range(fchain.shape[0]):
             param_dict = self.make_param_dict(fchain[i])
             model.update(**param_dict)
+            model.update_pop_z(z)
             sfr = model.pop.get_sfr(m)
             lum = model.pop.get_lum_line(m)
             ax.plot(np.log10(lum),np.log10(sfr),lw=0.5,alpha=alpha,\
