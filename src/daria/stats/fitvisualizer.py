@@ -143,7 +143,7 @@ class FitVisualizer(object):
             sfrds_arr[i][:] = sfrd
 
         if plot_type == 'models':
-            for i in range(1000):
+            for i in range(fchain.shape[0]):
                 ax.plot(z,sfrds_arr[i],alpha=0.01,color='tab:blue')
         else:
             per_16 = np.percentile(sfrds_arr,16,axis=0)
