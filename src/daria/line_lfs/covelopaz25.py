@@ -59,7 +59,7 @@ class CoveloPaz25:
     def dict_keys(self):
         if self.sym_err:
             return ['log10L','phi','phi_err']
-	else:
+        else:
             return ['log10L','phi','phi_err','phi_err_lo','phi_err_hi']
     
     def get_data(self):
